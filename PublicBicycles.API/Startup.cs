@@ -6,10 +6,13 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using PublicBicycles.API.Controllers;
+using PublicBicycles.Service;
 
 namespace PublicBicycles.API
 {
@@ -33,11 +36,17 @@ namespace PublicBicycles.API
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
-            services.AddControllers().AddNewtonsoftJson(options =>//支持循环嵌套（如Car-PublicBicyclesRecord-Car）
-options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore); 
+            services.AddControllers().AddNewtonsoftJson(options =>
+options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
             services.AddCors(option => option.AddPolicy("cors", policy => policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()));
-
+            using var db = new Context();
+            //db.Database.EnsureDeleted();
+            db.Database.EnsureCreated();
+            if(!db.Users.Any())
+            {
+                //PublicBicyclesDatabaseInitializer.GenerateTestDatas(db);
+            }
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -23,9 +23,9 @@ namespace PublicBicycles.Service
         {
             //起始时间
             DateTime earliest = DateTime.Now.AddDays(-days);
-            var records  =(await db.PublicBicyclesRecords
-                    .Where(p => p.EnterTime > earliest).ToListAsync())
-                    .GroupBy(p => p.EnterTime.Date);
+            var records  =(await db.Hires
+                    .Where(p => p.HireTime > earliest).ToListAsync())
+                    .GroupBy(p => p.HireTime.Value.Date);
             SortedDictionary<DateTime, int> result = new SortedDictionary<DateTime, int>();
             foreach (var day in records)
             {
