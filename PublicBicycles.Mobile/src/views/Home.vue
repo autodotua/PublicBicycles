@@ -12,7 +12,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Cookies from "js-cookie";
-import ol, { Map, View, source, layer, proj, Feature } from "openlayers";
+import ol, { Map, View, proj, Feature } from "openlayers";
 import { withToken, getUrl, showError, jump, formatDateTime } from "../common";
 export default Vue.extend({
   name: "Home",
@@ -42,6 +42,26 @@ export default Vue.extend({
         })
       );
     },
+    getStyle(feature: ol.Feature | ol.render.Feature,scale=1): ol.style.Style {
+      return      new ol.style.Style({
+        image: new ol.style.Icon({
+          src: "../img/bicycle.svg",
+          scale: scale
+        }),
+
+        text: new ol.style.Text({
+          offsetY: 18+scale*6,
+          fill: new ol.style.Fill({
+            color: "#000"
+          }),
+          stroke: new ol.style.Stroke({
+            color: "#fff",
+            width: 3
+          }),
+          text: feature.getProperties().object.name
+        })
+      });
+    },
     initMap() {
       this.map = new ol.Map({
         target: "map",
@@ -58,6 +78,14 @@ export default Vue.extend({
         "http://t0.tianditu.com/cva_w/wmts?service=WMTS&request=GetTile&version=1.0.0&layer=cva&style=default&TILEMATRIXSET=w&format=tiles&height=256&width=256&tilematrix={z}&tilerow={y}&tilecol={x}&tk=9396357d4b92e8e197eafa646c3c541d"
       );
       this.map.addLayer(this.stationLayer);
+      const selection = new ol.interaction.Select({
+        condition: ol.events.condition.click,
+        style: feature => this.getStyle(feature,2)
+      });
+      this.map.addInteraction(selection);
+      selection.on("select", e => {
+        console.log(e);
+      });
     }
   },
   components: {},
@@ -77,7 +105,10 @@ export default Vue.extend({
             const point = new ol.geom.Point(
               ol.proj.fromLonLat([station.lng, station.lat])
             );
-            const feature = new Feature(point);
+            const feature = new Feature({
+              geometry: point,
+              object: station
+            });
             features.push(feature);
           }
 
@@ -85,20 +116,9 @@ export default Vue.extend({
             source: new ol.source.Vector({
               features: features
             }),
-            style: function(feature) {
-              const style = new ol.style.Style({
-                image: new ol.style.Circle({
-                  radius: 7,
-                  fill: new ol.style.Fill({ color: "green" }),
-                  stroke: new ol.style.Stroke({
-                    color: [255, 0, 0,255],
-                    width: 2
-                  })
-                })
-              });
-              return style;
-            }
+            style:feature=>this.getStyle(feature)
           });
+          this.stationLayer = layer;
           this.map.addLayer(layer);
         })
         .catch(showError);
