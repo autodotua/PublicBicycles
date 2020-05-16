@@ -1,16 +1,23 @@
 <template>
-  <div>
+  <div class="container">
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/css/ol.css"
       type="text/css"
     />
-
     <div id="map"></div>
+    <el-drawer
+      title
+      :visible.sync="drawerDetail"
+      :with-header="true"
+      direction="btt"
+      size="360px"
+    >{{stationName}}</el-drawer>
   </div>
 </template>
-<script lang="ts">
+<script>
 import Vue from "vue";
+import "../map/ClusterLayer";
 import Cookies from "js-cookie";
 import ol, { Map, View, proj, Feature } from "openlayers";
 import { withToken, getUrl, showError, jump, formatDateTime } from "../common";
@@ -20,6 +27,8 @@ export default Vue.extend({
     return {
       stations: [],
       map: new Map({}),
+      drawerDetail: false,
+      stationName: "",
       stationLayer: new ol.layer.Vector({
         source: new ol.source.Vector({
           features: []
@@ -30,10 +39,10 @@ export default Vue.extend({
   computed: {},
   methods: {
     jump: jump,
-    getImageUrl(id: number): string {
+    getImageUrl(id) {
       return getUrl("Home", "PublicBicyclesImage") + "/" + id;
     },
-    addLayer(url: string) {
+    addLayer(url) {
       this.map.addLayer(
         new ol.layer.Tile({
           source: new ol.source.XYZ({
@@ -42,15 +51,15 @@ export default Vue.extend({
         })
       );
     },
-    getStyle(feature: ol.Feature | ol.render.Feature,scale=1): ol.style.Style {
-      return      new ol.style.Style({
+    getStyle(feature, scale = 1) {
+      return new ol.style.Style({
         image: new ol.style.Icon({
           src: "../img/bicycle.svg",
           scale: scale
         }),
 
         text: new ol.style.Text({
-          offsetY: 18+scale*6,
+          offsetY: 18 + scale * 6,
           fill: new ol.style.Fill({
             color: "#000"
           }),
@@ -80,11 +89,18 @@ export default Vue.extend({
       this.map.addLayer(this.stationLayer);
       const selection = new ol.interaction.Select({
         condition: ol.events.condition.click,
-        style: feature => this.getStyle(feature,2)
+        style: feature => this.getStyle(feature, 2)
       });
       this.map.addInteraction(selection);
       selection.on("select", e => {
         console.log(e);
+        if (e.selected.length > 0) {
+          this.stationName = e.selected[0].getProperties().object.name;
+          setTimeout(() => {
+            //这个事件触发太早了，不延迟的话，抽屉会识别到外部点击事件然后马上收回
+            this.drawerDetail = true;
+          }, 200);
+        }
       });
     }
   },
@@ -99,8 +115,22 @@ export default Vue.extend({
         .get(getUrl("Map", "Stations"))
         .then(response => {
           console.log(response);
-
-          const features = new Array<Feature>();
+          const data = [];
+          for (const station of response.data.data) {
+            data.push({ lat: station.lat, lon: station.lng });
+          }
+          const cluster = ol.layer.ClusterLayer({
+            map: this.map,
+            clusterField: "",
+            zooms: [15],
+            distance: 100,
+            data: data,
+            style: null
+          });
+          this.map.addLayer(cluster);
+          //return;
+          // eslint-disable-next-line no-unreachable
+          const features = [];
           for (const station of response.data.data) {
             const point = new ol.geom.Point(
               ol.proj.fromLonLat([station.lng, station.lat])
@@ -113,10 +143,11 @@ export default Vue.extend({
           }
 
           const layer = new ol.layer.Vector({
+            maxResolution:15,
             source: new ol.source.Vector({
               features: features
             }),
-            style:feature=>this.getStyle(feature)
+            style: feature => this.getStyle(feature)
           });
           this.stationLayer = layer;
           this.map.addLayer(layer);
@@ -126,3 +157,13 @@ export default Vue.extend({
   }
 });
 </script>
+<style scoped>
+#map {
+  width: 100%;
+  height: 100%;
+}
+.container {
+  height: 100%;
+  width: 100%;
+}
+</style>

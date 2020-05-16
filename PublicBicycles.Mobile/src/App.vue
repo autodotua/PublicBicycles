@@ -14,7 +14,7 @@
 
       <el-header class="header" v:show="showHeader">
         <el-button type="text" style="float:right" @click="clickUsername">{{username}}</el-button>
-        <h3 style="float:left" @click="jump('')">停车场</h3>
+        <h3 style="float:left" @click="jump('')">公共自行车</h3>
         <slot name="header"></slot>
       </el-header>
       <el-main>
@@ -46,18 +46,18 @@ export default Vue.extend({
         this.showHeader = false;
       } else {
         if (Cookies.get("userID") == undefined) {
-         jump("login");
+          jump("login");
         }
       }
     });
   },
   methods: {
-    jump:jump,
+    jump: jump,
     clickUsername() {
       this.$confirm("是否退出账户？", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
-        type: "warning",
+        type: "warning"
       }).then(() => {
         Cookies.remove("username");
         Cookies.remove("userID");
@@ -72,12 +72,24 @@ export default Vue.extend({
 .header-title {
   float: left;
   margin-top: 0px;
-}.el-message-box{
-  width:auto!important;
 }
-body{
+.el-message-box {
+  width: auto !important;
+}
+
+html,
+body,
+#app,
+.el-container,
+.el-main {
   overflow-x: hidden;
+  width: 100%;
+  height: 100%;
+  padding: 0px!important;
+  margin: 0px;
 }
+
+
 </style>
 <style scoped>
 /* #app {
@@ -103,5 +115,4 @@ header a {
   color: #606266;
   margin-top: 12px;
 }
-
 </style>
