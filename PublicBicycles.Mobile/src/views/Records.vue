@@ -1,12 +1,12 @@
 <template>
   <div>
-    <h2 class="header-title">交易记录</h2>
+    <h2 class="header-title" style="margin-left:12px">借车记录</h2>
     <!-- <el-button style="float:right" type="primary" @click="drawerAdd=true">新增</el-button> -->
     <el-table :data="records" style="width: 100%">
       <el-table-column prop="hireTime" label="借车时间" width="160"></el-table-column>
       <el-table-column prop="returnTime" label="还车时间" width="160"></el-table-column>
-      <el-table-column prop="hireStation.name" label="借车站点" width="80"></el-table-column>
-      <el-table-column prop="returnStation.name" label="还车站点" width="80"></el-table-column>
+      <el-table-column prop="hireStation.name" label="借车站点" width="160"></el-table-column>
+      <el-table-column prop="returnStation.name" label="还车站点" width="160"></el-table-column>
     </el-table>
   </div>
 </template>

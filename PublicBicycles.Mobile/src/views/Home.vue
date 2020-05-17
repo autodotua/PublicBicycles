@@ -1,107 +1,121 @@
 <template>
   <div class="container">
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/gh/openlayers/openlayers.github.io@master/en/v6.3.1/css/ol.css"
-      type="text/css"
-    />
-    <div id="map"></div>
+    <map-view @select="stationSelected" map-type="normal"></map-view>
+    <div id="hire-bar" class="bar" v-show="currentHire">
+      <a>从{{currentHire?formatDateTime(currentHire.hireTime):""}}起借车</a>
+    </div>
     <el-drawer
       title
       :visible.sync="drawerDetail"
-      :with-header="true"
+      :with-header="false"
       direction="btt"
       size="360px"
-    >{{stationName}}</el-drawer>
+      class="bicycles"
+    >
+      <h2 style="float:left">{{station?station.name:""}}</h2>
+
+      <el-button
+        class="return-btn"
+        plain
+        size="small"
+        style="float:right"
+        v-show="currentHire"
+        @click="returnBicycle"
+      >还车</el-button>
+      <el-table :data="bicycles" style="width: 100%">
+        <el-table-column prop="id" label="ID" width="160"></el-table-column>
+        <el-table-column fixed="right" label="操作" width="100">
+          <template slot-scope="scope">
+            <el-button @click="hireBicycle(scope.row)" type="text" size="small">借车</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-drawer>
   </div>
 </template>
 <script>
 import Vue from "vue";
 import "../map/ClusterLayer";
 import Cookies from "js-cookie";
-import ol, { Map, View, proj, Feature } from "openlayers";
-import { withToken, getUrl, showError, jump, formatDateTime } from "../common";
+import {
+  withToken,
+  getUrl,
+  showError,
+  jump,
+  formatDateTime,
+  showNotify
+} from "../common";
+import Map from "../components/Map";
 export default Vue.extend({
   name: "Home",
   data() {
     return {
-      stations: [],
+      bicycles: [],
       map: new Map({}),
       drawerDetail: false,
-      stationName: "",
-      stationLayer: new ol.layer.Vector({
-        source: new ol.source.Vector({
-          features: []
-        })
-      })
+      station: undefined,
+      currentHire: undefined
     };
+  },
+  comments: {
+    "map-view": Map
   },
   computed: {},
   methods: {
+    formatDateTime: formatDateTime,
     jump: jump,
     getImageUrl(id) {
       return getUrl("Home", "PublicBicyclesImage") + "/" + id;
     },
-    addLayer(url) {
-      this.map.addLayer(
-        new ol.layer.Tile({
-          source: new ol.source.XYZ({
-            url: url
+    returnBicycle() {
+      console.log(this.currentHire)
+      Vue.axios
+        .post(
+          getUrl("User", "Return"),
+          withToken({
+            bicycleID: this.currentHire.bicycle.id,
+            stationID: this.station.id
           })
+        )
+        .then(response => {
+          if (response.data.succeed) {
+            showNotify("还车成功");
+            this.currentHire =undefined;
+          } else {
+            showError(response.data.message);
+          }
         })
-      );
+        .catch(showError);
     },
-    getStyle(feature, scale = 1) {
-      return new ol.style.Style({
-        image: new ol.style.Icon({
-          src: "../img/bicycle.svg",
-          scale: scale
-        }),
+    hireBicycle(item) {
+      Vue.axios
+        .post(
+          getUrl("User", "Hire"),
+          withToken({
+            bicycleID: item.id,
+            stationID: this.station.id
+          })
+        )
+        .then(response => {
+          if (response.data.succeed) {
+            showNotify("借车成功");
+            this.currentHire = response.data.data;
+          } else {
+            showError(response.data.message);
+          }
+        })
+        .catch(showError);
+    },
 
-        text: new ol.style.Text({
-          offsetY: 18 + scale * 6,
-          fill: new ol.style.Fill({
-            color: "#000"
-          }),
-          stroke: new ol.style.Stroke({
-            color: "#fff",
-            width: 3
-          }),
-          text: feature.getProperties().object.name
+    stationSelected(station) {
+      this.drawerDetail = true;
+      this.station = station;
+      Vue.axios
+        .get(getUrl("Map", "Bicycles") + `/${station.id}`)
+        .then(response => {
+          this.bicycles = response.data.data;
         })
-      });
-    },
-    initMap() {
-      this.map = new ol.Map({
-        target: "map",
-        layers: [],
-        view: new View({
-          center: proj.fromLonLat([121.56, 29.86]),
-          zoom: 12
-        })
-      });
-      this.addLayer(
-        "http://t0.tianditu.com/vec_w/wmts?service=WMTS&request=GetTile&version=1.0.0&layer=vec&style=default&TILEMATRIXSET=w&format=tiles&height=256&width=256&tilematrix={z}&tilerow={y}&tilecol={x}&tk=9396357d4b92e8e197eafa646c3c541d"
-      );
-      this.addLayer(
-        "http://t0.tianditu.com/cva_w/wmts?service=WMTS&request=GetTile&version=1.0.0&layer=cva&style=default&TILEMATRIXSET=w&format=tiles&height=256&width=256&tilematrix={z}&tilerow={y}&tilecol={x}&tk=9396357d4b92e8e197eafa646c3c541d"
-      );
-      this.map.addLayer(this.stationLayer);
-      const selection = new ol.interaction.Select({
-        condition: ol.events.condition.click,
-        style: feature => this.getStyle(feature, 2)
-      });
-      this.map.addInteraction(selection);
-      selection.on("select", e => {
-        console.log(e);
-        if (e.selected.length > 0) {
-          this.stationName = e.selected[0].getProperties().object.name;
-          setTimeout(() => {
-            //这个事件触发太早了，不延迟的话，抽屉会识别到外部点击事件然后马上收回
-            this.drawerDetail = true;
-          }, 200);
-        }
-      });
+        .catch(showError);
     }
   },
   components: {},
@@ -110,47 +124,10 @@ export default Vue.extend({
       if (Cookies.get("userID") == undefined) {
         return;
       }
-      this.initMap();
       Vue.axios
-        .get(getUrl("Map", "Stations"))
+        .post(getUrl("User", "Status"), withToken({}))
         .then(response => {
-          console.log(response);
-          const data = [];
-          for (const station of response.data.data) {
-            data.push({ lat: station.lat, lon: station.lng });
-          }
-          const cluster = ol.layer.ClusterLayer({
-            map: this.map,
-            clusterField: "",
-            zooms: [15],
-            distance: 100,
-            data: data,
-            style: null
-          });
-          this.map.addLayer(cluster);
-          //return;
-          // eslint-disable-next-line no-unreachable
-          const features = [];
-          for (const station of response.data.data) {
-            const point = new ol.geom.Point(
-              ol.proj.fromLonLat([station.lng, station.lat])
-            );
-            const feature = new Feature({
-              geometry: point,
-              object: station
-            });
-            features.push(feature);
-          }
-
-          const layer = new ol.layer.Vector({
-            maxResolution:15,
-            source: new ol.source.Vector({
-              features: features
-            }),
-            style: feature => this.getStyle(feature)
-          });
-          this.stationLayer = layer;
-          this.map.addLayer(layer);
+          this.currentHire = response.data.data;
         })
         .catch(showError);
     });
@@ -165,5 +142,32 @@ export default Vue.extend({
 .container {
   height: 100%;
   width: 100%;
+}
+
+.bicycles .el-table {
+  margin: 12px;
+}
+.bicycles h2 {
+  margin-left: 12px;
+}
+
+.bar {
+  width: 100%;
+  height: 48px;
+  position: absolute;
+  top: 60px;
+  left: 0;
+  background: orange;
+  line-height: 48px;
+}
+.bar a {
+  margin-left: 12px;
+  color: #ffffff;
+}
+
+.return-btn {
+  float: right;
+  margin-top: 16px;
+  margin-right: 8px;
 }
 </style>

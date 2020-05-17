@@ -1,7 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PublicBicycles.Models;
-using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -95,10 +93,9 @@ namespace PublicBicycles.Service
             }
             return sb.ToString();
         }
-    }
-    /// <summary>
-    /// 登陆注册结果
-    /// </summary>
+    } /// <summary>
+      /// 登陆注册结果
+      /// </summary>
     public class LoginOrRegisterResult
     {
         /// <summary>

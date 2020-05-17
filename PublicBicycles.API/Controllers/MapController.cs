@@ -24,10 +24,16 @@ namespace PublicBicycles.API.Controllers
             return new ResponseData<List<Station>>(stations);
         }
         [HttpGet]
-        [Route("Station/{id}")]
-        public async Task<IActionResult> StationAsync(int id)
+        [Route("Bicycles/{id}")]
+        public async Task<ResponseData<List<Bicycle>>> BicyclesAsync(int id)
         {
-            return null;
+            var bicycles =await db.Bicycles
+                .Where(p => p.Station.ID == id)
+                .Where(p=>p.CanHire)
+                .Where(p=>!p.Deleted)
+                .ToListAsync();
+
+            return new ResponseData<List<Bicycle>>(bicycles);
         }
 
 

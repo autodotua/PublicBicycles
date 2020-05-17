@@ -1,4 +1,5 @@
-﻿using PublicBicycles.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using PublicBicycles.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -34,6 +35,7 @@ namespace PublicBicycles.Service
             db.Stations.Update(station);
 
             bicycle.Hiring = true;
+            bicycle.Station = null;
             db.Update(bicycle);
 
             await db.SaveChangesAsync();
@@ -42,7 +44,12 @@ namespace PublicBicycles.Service
 
         public static async Task<Hire> GetHiringAsync(PublicBicyclesContext db,int userID)
         {
-            return await db.Hires.LastOrDefaultRecordAsync(p => p.HireTime.Value, p => p.Hirer.ID == userID );
+            return await db.Hires
+                .OrderByDescending(p => p.HireTime.Value)
+                .Where(p => p.Hirer.ID == userID && p.ReturnStation == null)
+                .Include(p => p.Bicycle)
+                .Include(p => p.HireStation)
+                .FirstOrDefaultAsync();
         }
         public static async Task<ReturnResult> ReturnAsync(PublicBicyclesContext db, int userID, int bicycleID, int stationID)
         {
@@ -75,6 +82,7 @@ namespace PublicBicycles.Service
             db.Stations.Update(station);
 
             bicycle.Hiring = false;
+            bicycle.Station = station;
             db.Update(bicycle);
 
             await db.SaveChangesAsync();

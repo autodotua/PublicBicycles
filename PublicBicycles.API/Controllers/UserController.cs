@@ -95,32 +95,73 @@ namespace PublicBicycles.API.Controllers
                 .Include(p => p.ReturnStation)
                 .ToListAsync());
         }
-    }
-
-    /// <summary>
-    /// 登录请求
-    /// </summary>
-    public class LoginRequest
-    {
-        /// <summary>
-        /// 密码
-        /// </summary>
-        public string Password { get; set; }
-        /// <summary>
-        /// 用户名
-        /// </summary>
-        public string Username { get; set; }
-    }
-
-    public class LoginResult : UserToken
-    {
-        public LoginResult(User user) : base(user.ID, true)
+        [HttpPost]
+        [Route("Hire")]
+        public async Task<ResponseData<Hire>> HireAsync([FromBody] HireReturnRequest hireRequest)
         {
-            User = user;
-            user.Password = null;
+            var result = await HireService.HireAsync(db, hireRequest.UserID, hireRequest.BicycleID, hireRequest.StationID);
+            return result.Type switch
+            {
+                HireResultType.Succeed => new ResponseData<Hire>(result.Hire),
+                HireResultType.AnotherIsHired => new ResponseData<Hire>(result.Hire, false, "借车失败：您已经借了一辆车"),
+                HireResultType.DatabaseError => new ResponseData<Hire>(result.Hire, false, "借车失败：内部错误"),
+                _ => throw new NotImplementedException(),
+            };
+        }         
+        [HttpPost]
+        [Route("Return")]
+        public async Task<ResponseData<Hire>> ReturnAsync([FromBody] HireReturnRequest request)
+        {
+            var result = await HireService.ReturnAsync(db, request.UserID, request.BicycleID, request.StationID);
+            return result.Type switch
+            {
+                ReturnResultType.Succeed => new ResponseData<Hire>(result.Hire),
+                ReturnResultType.RecordNotFound => new ResponseData<Hire>(result.Hire, false, "还车失败：没有找到借车记录"),
+                ReturnResultType.StationIsFull => new ResponseData<Hire>(result.Hire, false, "还车失败：车站已满"),
+                ReturnResultType.StationCannotReturn => new ResponseData<Hire>(result.Hire, false, "还车失败：车站无法还车"),
+                ReturnResultType.DatabaseError => new ResponseData<Hire>(result.Hire, false, "还车失败：内部错误"),
+                _ => throw new NotImplementedException(),
+            };
+        }     
+        [HttpPost]
+        [Route("Status")]
+        public async Task<ResponseData<Hire>> StatusAsync([FromBody] UserToken userToken)
+        {
+            var result = await HireService.GetHiringAsync(db, userToken.UserID);
+            return new ResponseData<Hire>(result);
+           
         }
 
-        public User User { get; set; }
-    }
+        /// <summary>
+        /// 登录请求
+        /// </summary>
+        public class LoginRequest
+        {
+            /// <summary>
+            /// 密码
+            /// </summary>
+            public string Password { get; set; }
+            /// <summary>
+            /// 用户名
+            /// </summary>
+            public string Username { get; set; }
+        }
+        public class HireReturnRequest : UserToken
+        {
+            public int BicycleID { get; set; }
+            public int StationID { get; set; }
+        }
 
+        public class LoginResult : UserToken
+        {
+            public LoginResult(User user) : base(user.ID, true)
+            {
+                User = user;
+                user.Password = null;
+            }
+
+            public User User { get; set; }
+        }
+
+    }
 }
