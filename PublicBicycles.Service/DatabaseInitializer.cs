@@ -14,7 +14,7 @@ namespace PublicBicycles.Service
     /// <summary>
     /// 数据库初始化器
     /// </summary>
-    public static class PublicBicyclesDatabaseInitializer
+    public static class DatabaseInitializer
     {
         /// <summary>
         /// 生成测试数据
@@ -53,6 +53,7 @@ namespace PublicBicycles.Service
                     Bicycle bicycle = new Bicycle() { Station = station };
                     bicycles.Add(bicycle);
                 }
+                station.BicycleCount = station.Count / 2;
             }
             db.AddRange(stations);
             db.AddRange(bicycles);
@@ -105,6 +106,16 @@ namespace PublicBicycles.Service
         public static void Initialize(PublicBicyclesContext context)
         {
             context.Database.EnsureCreated();
+            if(!context.Users.Any())
+            {
+                context.Users.Add(new User()
+                {
+                    IsAdmin = true,
+                    Username = "admin",
+                    Password = UserService.CreateMD5("admin")
+                }) ;
+                context.SaveChanges();
+            }
         }
 
         // 0名称 1桩位 2地址 3经度BD09 4纬度BD09 5纬度WGS84 6经度WGS84 7纬度GCJ02 8纬度GCJ02

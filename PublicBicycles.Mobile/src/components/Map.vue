@@ -81,7 +81,10 @@ export default Vue.component("map-view", {
       this.map = new ol.Map({
         target: "map",
         layers: [],
-        bicycles: [],
+        controls: ol.control.defaults({
+          attribution: false,
+          zoom: false
+        }),
         view: new View({
           center: proj.fromLonLat([121.56, 29.86]),
           zoom: 12
@@ -141,10 +144,18 @@ export default Vue.component("map-view", {
         source: new ol.source.Vector({
           features: features
         }),
-        loadWhileAnimating:false,
-        radius: 10,
+        loadWhileAnimating: false,
+        radius: 10
       });
       this.map.addLayer(heatmap);
+    },
+    panTo(loc) {
+      this.map.getView().animate({
+        duration: 300,
+        rotation: 0,
+        zoom: 16,
+        center: ol.proj.fromLonLat(loc)
+      });
     }
   },
   components: {},
@@ -158,6 +169,7 @@ export default Vue.component("map-view", {
         .get(getUrl("Map", "Stations"))
         .then(response => {
           const features = [];
+          this.$emit("gotStations", response.data.data);
           for (const station of response.data.data) {
             const point = new ol.geom.Point(
               ol.proj.fromLonLat([station.lng, station.lat])

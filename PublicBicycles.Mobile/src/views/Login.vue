@@ -80,11 +80,16 @@ export default Vue.extend({
   }
 });
 </script>
-<style>
+<style scoped>
 .box {
   width: 100%;
 }
 .box .el-row {
   width: 100%;
+}
+
+.login{
+  margin-left: 12px;
+  margin-right: 12px;
 }
 </style>

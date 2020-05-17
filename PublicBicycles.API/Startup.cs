@@ -42,11 +42,12 @@ options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoop
             services.AddCors(option => option.AddPolicy("cors", policy => policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin()));
             using var db = new Context();
             //db.Database.EnsureDeleted();
-            db.Database.EnsureCreated();
-            if(!db.Users.Any())
-            {
-                //PublicBicyclesDatabaseInitializer.GenerateTestDatas(db);
-            }
+            //db.Database.EnsureCreated();
+            //if(!db.Users.Any())
+            //{
+            //    //PublicBicyclesDatabaseInitializer.GenerateTestDatas(db);
+            //}
+            DatabaseInitializer.Initialize(db);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

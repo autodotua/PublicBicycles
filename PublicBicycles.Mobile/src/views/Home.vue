@@ -1,9 +1,17 @@
 <template>
   <div class="container">
-    <map-view @select="stationSelected" map-type="normal"></map-view>
+    <map-view ref="map" @select="stationSelected" map-type="normal" @gotStations="gotStations"></map-view>
     <div id="hire-bar" class="bar" v-show="currentHire">
       <a>从{{currentHire?formatDateTime(currentHire.hireTime):""}}起借车</a>
     </div>
+    <el-autocomplete
+      class="search"
+      :style="searchStyle"
+      v-model="searchContent"
+      :fetch-suggestions="querySearch"
+      placeholder="请输入内容"
+      @select="searchSelect"
+    ></el-autocomplete>
     <el-drawer
       title
       :visible.sync="drawerDetail"
@@ -12,7 +20,10 @@
       size="360px"
       class="bicycles"
     >
-      <h2 style="float:left">{{station?station.name:""}}</h2>
+      <a class="station-title" style="float:left">
+        <b>{{station?station.name:""}}</b>
+        {{station?station.bicycleCount:""}}/{{station?station.count:""}}
+      </a>
 
       <el-button
         class="return-btn"
@@ -22,7 +33,7 @@
         v-show="currentHire"
         @click="returnBicycle"
       >还车</el-button>
-      <el-table :data="bicycles" style="width: 100%">
+      <el-table :data="bicycles" style="width: 100%" height="280">
         <el-table-column prop="id" label="ID" width="160"></el-table-column>
         <el-table-column fixed="right" label="操作" width="100">
           <template slot-scope="scope">
@@ -43,7 +54,8 @@ import {
   showError,
   jump,
   formatDateTime,
-  showNotify
+  showNotify,
+  stations
 } from "../common";
 import Map from "../components/Map";
 export default Vue.extend({
@@ -54,21 +66,48 @@ export default Vue.extend({
       map: new Map({}),
       drawerDetail: false,
       station: undefined,
-      currentHire: undefined
+      currentHire: undefined,
+      searchContent: ""
     };
   },
   comments: {
     "map-view": Map
   },
-  computed: {},
+  computed: {
+    searchStyle() {
+      if (this.currentHire == null) {
+        return "top:72px;";
+      }
+      return "top:120px;";
+    }
+  },
   methods: {
+    searchSelect(e) {
+      console.log("选择到了", e);
+      this.$refs.map.panTo([e.lng, e.lat]);
+    },
+    gotStations(e) {
+      this.stations = e;
+    },
     formatDateTime: formatDateTime,
     jump: jump,
+    querySearch(queryString, callback) {
+      if (this.searchContent) {
+        const result = this.stations.filter(
+          p => p.name.indexOf(this.searchContent) >= 0
+        );
+        const values = [];
+        for (const station of result) {
+          values.push(Object.assign({ value: station.name }, station));
+        }
+        callback(values);
+      }
+    },
     getImageUrl(id) {
       return getUrl("Home", "PublicBicyclesImage") + "/" + id;
     },
     returnBicycle() {
-      console.log(this.currentHire)
+      console.log(this.currentHire);
       Vue.axios
         .post(
           getUrl("User", "Return"),
@@ -80,7 +119,7 @@ export default Vue.extend({
         .then(response => {
           if (response.data.succeed) {
             showNotify("还车成功");
-            this.currentHire =undefined;
+            this.currentHire = undefined;
           } else {
             showError(response.data.message);
           }
@@ -169,5 +208,16 @@ export default Vue.extend({
   float: right;
   margin-top: 16px;
   margin-right: 8px;
+}
+.station-title {
+  margin-top: 8px;
+  margin-left: 12px;
+  font-size: 1.25em;
+}
+.search {
+  position: absolute;
+  /* top: 120px; */
+  left: 24px;
+  right: 24px;
 }
 </style>

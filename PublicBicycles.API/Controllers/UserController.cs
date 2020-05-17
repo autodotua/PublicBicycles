@@ -13,9 +13,6 @@ using PublicBicycles.Service;
 
 namespace PublicBicycles.API.Controllers
 {
-    /// <summary>
-    /// 为PublicBicycles.Mobile提供用户相关API
-    /// </summary>
     public class UserController : PublicBicyclesControllerBase
     {
         /// <summary>
@@ -87,19 +84,27 @@ namespace PublicBicycles.API.Controllers
 
         [HttpPost]
         [Route("Records")]
-        public async Task<ResponseData<List<Hire>>> HireRecordsAsync([FromBody] UserToken userToken)
+        public async Task<ResponseData<List<Hire>>> HireRecordsAsync([FromBody] UserToken request)
         {
+            if (!request.IsValid())
+            {
+                return new ResponseData<List<Hire>>(null, false, "用户验证失败" );
+            }
             return new ResponseData<List<Hire>>(await db.Hires.
-                Where(p => p.Hirer.ID == userToken.UserID)
+                Where(p => p.Hirer.ID == request.UserID)
                 .Include(p => p.HireStation)
                 .Include(p => p.ReturnStation)
                 .ToListAsync());
         }
         [HttpPost]
         [Route("Hire")]
-        public async Task<ResponseData<Hire>> HireAsync([FromBody] HireReturnRequest hireRequest)
+        public async Task<ResponseData<Hire>> HireAsync([FromBody] HireReturnRequest request)
         {
-            var result = await HireService.HireAsync(db, hireRequest.UserID, hireRequest.BicycleID, hireRequest.StationID);
+            if (!request.IsValid())
+            {
+                return new ResponseData<Hire>(null, false, "用户验证失败");
+            }
+            var result = await HireService.HireAsync(db, request.UserID, request.BicycleID, request.StationID);
             return result.Type switch
             {
                 HireResultType.Succeed => new ResponseData<Hire>(result.Hire),
@@ -112,6 +117,10 @@ namespace PublicBicycles.API.Controllers
         [Route("Return")]
         public async Task<ResponseData<Hire>> ReturnAsync([FromBody] HireReturnRequest request)
         {
+            if (!request.IsValid())
+            {
+                return new ResponseData<Hire>(null, false, "用户验证失败");
+            }
             var result = await HireService.ReturnAsync(db, request.UserID, request.BicycleID, request.StationID);
             return result.Type switch
             {
@@ -125,9 +134,13 @@ namespace PublicBicycles.API.Controllers
         }     
         [HttpPost]
         [Route("Status")]
-        public async Task<ResponseData<Hire>> StatusAsync([FromBody] UserToken userToken)
+        public async Task<ResponseData<Hire>> StatusAsync([FromBody] UserToken request)
         {
-            var result = await HireService.GetHiringAsync(db, userToken.UserID);
+            if (!request.IsValid())
+            {
+                return new ResponseData<Hire>(null, false, "用户验证失败");
+            }
+            var result = await HireService.GetHiringAsync(db, request.UserID);
             return new ResponseData<Hire>(result);
            
         }
@@ -154,7 +167,7 @@ namespace PublicBicycles.API.Controllers
 
         public class LoginResult : UserToken
         {
-            public LoginResult(User user) : base(user.ID, true)
+            public LoginResult(User user) : base(user, true)
             {
                 User = user;
                 user.Password = null;

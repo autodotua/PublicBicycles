@@ -4,12 +4,23 @@ import Home from '../views/Home.vue'
 import Car from '../views/Car.vue'
 import Recharge from '../views/Recharge.vue'
 import Records from '../views/Records.vue'
+import Database from '../views/Database.vue'
 
 Vue.use(VueRouter)
 
   const routes: Array<RouteConfig> = [
   {
     path: '/home',
+    name: 'Home',
+    component: Home
+  },
+  {
+    path: '/database',
+    name: 'Database',
+    component: Database
+  },
+  {
+    path: '/',
     name: 'Home',
     component: Home
   },

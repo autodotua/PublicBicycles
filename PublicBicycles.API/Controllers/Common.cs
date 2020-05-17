@@ -73,19 +73,19 @@ namespace PublicBicycles.API.Controllers
 
         public UserToken()
         { }
-        public UserToken(int userID, bool createToken)
+        public UserToken(User user, bool createToken)
         {
-            UserID = userID;
+            UserID = user.ID;
             if (createToken)
             {
-                Token = GetToken();
+                Token = GetToken(user.IsAdmin);
             }
         }
         /// <summary>
         /// 判断UserID和Token是否匹配，进而判断用户是否合法
         /// </summary>
         /// <returns></returns>
-        public bool IsValid()
+        public bool IsValid(bool needAdmin=false)
         {
             var aes = new FzLib.Cryptography.Aes();
             aes.SetStringKey(Key + UserID);
@@ -94,6 +94,10 @@ namespace PublicBicycles.API.Controllers
             {
                 string[] items = aes.Decrypt(Token).Split("-");
                 if (items[0] != UserID.ToString())
+                {
+                    return false;
+                }
+                if(needAdmin && !bool.Parse(items[1]))
                 {
                     return false;
                 }
@@ -110,12 +114,12 @@ namespace PublicBicycles.API.Controllers
         /// 获取Token
         /// </summary>
         /// <returns></returns>
-        public string GetToken()
+        public string GetToken(bool isAdmin)
         {
             var aes = new FzLib.Cryptography.Aes();
             aes.SetStringKey(Key + UserID);
             aes.SetStringIV("");
-            return aes.Encrypt(string.Join("-", UserID.ToString(), DateTime.Now.ToString("yyyyMMdd")));
+            return aes.Encrypt(string.Join("-", UserID.ToString(), isAdmin.ToString(), DateTime.Now.ToString("yyyyMMdd")));
         }
     }
 }
