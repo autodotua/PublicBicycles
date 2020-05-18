@@ -35,17 +35,19 @@
       </el-dropdown>
 
       <el-table :data="bicycles" style="width: 100%" height="280">
-        <el-table-column prop="id" label="ID" width="160"></el-table-column>
+        <el-table-column prop="bicycleID" label="ID" width="160"></el-table-column>
         <el-table-column fixed="right" label="操作" width="100">
           <template slot-scope="scope">
-            <el-button @click="deleteBicycle(scope.row)" type="text" size="small">删除</el-button>
+            <el-popconfirm title="确认删除？" @onConfirm="deleteBicycle(scope.row)">
+              <el-button slot="reference" type="text" size="small">删除</el-button>
+            </el-popconfirm>
           </template>
         </el-table-column>
       </el-table>
     </el-drawer>
     <el-drawer
       title
-      :visible.sync="showAddBicycle"
+      :visible.sync="showAddPanel"
       :with-header="false"
       size="180px"
       class="bicycles"
@@ -53,14 +55,14 @@
       <a class="station-title" style="float:left">
         <b>添加自行车</b>
       </a>
-      <div v-show="showAddBicycle" style="margin: 48px 12px 0 12px">
+      <div v-show="showAddPanel" style="margin: 48px 12px 0 12px">
         <a>自行车ID：</a>
         <br />
         <el-input v-model="bicycle.bicycleID" size="small"></el-input>
         <br />
         <br />
         <el-button type="primary" @click="addBicycle" size="small">确定</el-button>
-        <el-button @click="showAddBicycle=false" size="small">取消</el-button>
+        <el-button @click="showAddPanel=false" size="small">取消</el-button>
       </div>
     </el-drawer>
   </div>
@@ -89,7 +91,7 @@ export default Vue.extend({
       stations: [],
       station: undefined,
       searchContent: "",
-      showAddBicycle: false
+      showAddPanel: false
     };
   },
   components: {
@@ -108,21 +110,82 @@ export default Vue.extend({
       setTimeout(() => {
         switch (cmd) {
           case "deleteStation":
+            this.deleteStation();
             break;
           case "deleteBicycle":
             break;
           case "addBicycle":
-            this.showAddBicycle = true;
+            this.showAddPanel = true;
             this.drawerDetail = false;
             break;
         }
       }, 100);
     },
-    addBicycle() {
-      console.log("");
+    deleteStation(){
+   this.$confirm('是否删除该站点?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+        Vue.axios
+        .post(
+          getUrl("Admin", "Station"),
+          withToken({
+            stationID: this.station.id,
+            type: "delete"
+          })
+        )
+        .then(response => {
+          if (response.data.succeed) {
+            showNotify("删除成功，将在刷新后消失");
+            this.drawerDetail=false
+            this.stations.slice(this.stations.indexOf(this.station),1);
+          } else {
+            showError(response.data.message);
+          }
+        })
+        .catch(showError);
+        })
     },
-    deleteBicycle(id) {
-      console.log(id);
+    addBicycle() {
+        Vue.axios
+        .post(
+          getUrl("Admin", "Bicycle"),
+          withToken({
+            bicycleID: this.bicycle.bicycleID,
+            stationID: this.station.id,
+            type: "add"
+          })
+        )
+        .then(response => {
+          if (response.data.succeed) {
+            showNotify("新建成功");
+            this.showAddPanel=false
+          } else {
+            showError(response.data.message);
+          }
+        })
+        .catch(showError);
+    },
+    deleteBicycle(bicycle) {
+      Vue.axios
+        .post(
+          getUrl("Admin", "Bicycle"),
+          withToken({
+            bicycleID: bicycle.id,
+            stationID: this.station.id,
+            type: "delete"
+          })
+        )
+        .then(response => {
+          if (response.data.succeed) {
+            showNotify("删除成功");
+            this.bicycles.splice(this.bicycles.indexOf(bicycle),1);
+          } else {
+            showError(response.data.message);
+          }
+        })
+        .catch(showError);
     },
     searchSelect(e) {
       console.log("选择到了", e);

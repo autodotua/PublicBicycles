@@ -9,8 +9,8 @@ namespace PublicBicycles.Service
     public static class HireService
     {
         internal static Func<DateTime> Now { get; set; } = () => DateTime.Now;
-        internal static bool  SaveChanges { get; set; } = true;
-        internal static System.Collections.Generic.List<Hire> Hires { get; set; } 
+        internal static bool SaveChanges { get; set; } = true;
+        internal static System.Collections.Generic.List<Hire> Hires { get; set; }
         public static async Task<HireResult> HireAsync(PublicBicyclesContext db, int userID, int bicycleID, int stationID)
         {
             User user = db.Users.Find(userID);
@@ -46,7 +46,7 @@ namespace PublicBicycles.Service
             return new HireResult(hire, HireResultType.Succeed);
         }
 
-        public static async Task<Hire> GetHiringAsync(PublicBicyclesContext db,int userID)
+        public static async Task<Hire> GetHiringAsync(PublicBicyclesContext db, int userID)
         {
             return await db.Hires
                 .OrderByDescending(p => p.HireTime.Value)
@@ -61,7 +61,7 @@ namespace PublicBicycles.Service
             Station station = db.Stations.Find(stationID);
             Bicycle bicycle = db.Bicycles.Find(bicycleID);
             Hire hire = await GetHiringAsync(db, userID);
-            if(hire==null && Hires!=null && Hires.Any(p=>p.Hirer.ID==userID))
+            if (hire == null && Hires != null && Hires.Any(p => p.Hirer.ID == userID))
             {
                 hire = Hires.First(p => p.Hirer.ID == userID);
             }
@@ -96,51 +96,52 @@ namespace PublicBicycles.Service
             {
                 await db.SaveChangesAsync();
             }
-            return new ReturnResult(hire, ReturnResultType.Succeed) ;
+            return new ReturnResult(hire, ReturnResultType.Succeed);
         }
-    
-    }    public class HireResult
-        {
-            public HireResult()
-            {
-            }
 
-            public HireResult(Hire hire, HireResultType type)
-            {
-                Hire = hire;
-                Type = type;
-            }
-
-            public Hire Hire { get; set; }
-            public HireResultType Type { get; set; }
-        }
-        public class ReturnResult
+    }
+    public class HireResult
+    {
+        public HireResult()
         {
-            public ReturnResult()
-            {
-            }
+        }
 
-            public ReturnResult(Hire hire, ReturnResultType type)
-            {
-                Hire = hire;
-                Type = type;
-            }
+        public HireResult(Hire hire, HireResultType type)
+        {
+            Hire = hire;
+            Type = type;
+        }
 
-            public Hire Hire { get; set; }
-            public ReturnResultType Type { get; set; }
-        }
-        public enum HireResultType
+        public Hire Hire { get; set; }
+        public HireResultType Type { get; set; }
+    }
+    public class ReturnResult
+    {
+        public ReturnResult()
         {
-            Succeed,
-            AnotherIsHired,
-            DatabaseError
         }
-        public enum ReturnResultType
+
+        public ReturnResult(Hire hire, ReturnResultType type)
         {
-            Succeed,
-            RecordNotFound,
-            StationIsFull,
-            StationCannotReturn,
-            DatabaseError
+            Hire = hire;
+            Type = type;
         }
+
+        public Hire Hire { get; set; }
+        public ReturnResultType Type { get; set; }
+    }
+    public enum HireResultType
+    {
+        Succeed,
+        AnotherIsHired,
+        DatabaseError
+    }
+    public enum ReturnResultType
+    {
+        Succeed,
+        RecordNotFound,
+        StationIsFull,
+        StationCannotReturn,
+        DatabaseError
+    }
 }

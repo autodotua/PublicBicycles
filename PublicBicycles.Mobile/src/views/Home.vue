@@ -34,7 +34,7 @@
         @click="returnBicycle"
       >还车</el-button>
       <el-table :data="bicycles" style="width: 100%" height="280">
-        <el-table-column prop="id" label="ID" width="160"></el-table-column>
+        <el-table-column prop="bicycleID" label="ID" width="160"></el-table-column>
         <el-table-column fixed="right" label="操作" width="100">
           <template slot-scope="scope">
             <el-button @click="hireBicycle(scope.row)" type="text" size="small">借车</el-button>

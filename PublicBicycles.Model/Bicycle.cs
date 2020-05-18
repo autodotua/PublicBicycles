@@ -10,8 +10,8 @@ namespace PublicBicycles.Models
         public Station Station { get; set; }
         //public int StationID { get; set; }
         public bool CanHire { get; set; } = true;
-        public bool Deleted { get; set; }
-        public bool Hiring { get; set; }
+        public bool Deleted { get; set; } = false;
+        public bool Hiring { get; set; } = false;
     }
 
 }

@@ -53,7 +53,7 @@ export default Vue.component("map-view", {
         }),
 
         text: new ol.style.Text({
-          offsetY: 18 ,
+          offsetY: 24,
           fill: new ol.style.Fill({
             color: "#000"
           }),

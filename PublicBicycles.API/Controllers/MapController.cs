@@ -20,7 +20,10 @@ namespace PublicBicycles.API.Controllers
         [Route("Stations")]
         public async Task<ResponseData<List<Station>>> StationsAsync()
         {
-            var stations = await db.Stations.Where(p => p.Online).ToListAsync();
+            var stations = await db.Stations
+                .Where(p => p.Online)
+                .Where(p=>!p.Deleted)
+                .ToListAsync();
             return new ResponseData<List<Station>>(stations);
         }
         [HttpGet]
