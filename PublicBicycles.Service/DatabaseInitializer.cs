@@ -26,6 +26,8 @@ namespace PublicBicycles.Service
         {
             db.Database.EnsureDeleted();
             db.Database.EnsureCreated();
+
+            HireService.SaveChanges = false;
             List<User> users = new List<User>();
             for (int i = 0; i < 1000; i++)
             {
@@ -36,7 +38,7 @@ namespace PublicBicycles.Service
                 });
             }
             db.AddRange(users);
-
+            int bicycleID = 1;
             List<Station> stations = new List<Station>();
             List<Bicycle> bicycles = new List<Bicycle>();
             foreach (var line in stationTable.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
@@ -53,7 +55,7 @@ namespace PublicBicycles.Service
                 stations.Add(station);
                 for (int i = 0; i < station.Count / 2; i++)
                 {
-                    Bicycle bicycle = new Bicycle() { Station = station };
+                    Bicycle bicycle = new Bicycle() { Station = station, BicycleID=(bicycleID++) };
                     bicycles.Add(bicycle);
                 }
                 station.BicycleCount = station.Count / 2;
@@ -73,15 +75,16 @@ namespace PublicBicycles.Service
                 for (DateTime time = fromTime; time < toTime; time = time.AddMinutes(1))
                 {
                     HireService.Now = () => time;
+                    bool hiredOrReturn = false;
                     if (time.Hour >= 7 && hirings.Count > 5)
                     {
+                         hiredOrReturn = true;
                         Hire hire = hirings[r.Next(0, hirings.Count - 1)];
                         var p1 = new Point(hire.HireStation.Lng, hire.HireStation.Lat) { SRID = 4326 };
                         Station station = null;
                         double distance = 0;
                         do
                         {
-
                             station = stations[r.Next(0, stations.Count - 1)];
                             var p2 = new Point(station.Lng, station.Lat) { SRID = 4326 };
                             distance = FzLib.Geography.Analysis.Calculate.Distance(p1, p2);
@@ -95,8 +98,9 @@ namespace PublicBicycles.Service
                         }
                     }
 
-                    if (hirings.Count < 100 && hirings.Count <21)
+                    if (hirings.Count < 100 && time.Hour < 21)
                     {
+                        hiredOrReturn = true;
                         Station station = stations[r.Next(0, stations.Count - 1)];
                         Bicycle bicycle = db.Bicycles.Where(p => p.Station == station && !p.Hiring).First();
                         var hire = HireService.HireAsync(db, users[r.Next(0, users.Count)].ID, bicycle.ID, station.ID).Result;
@@ -106,9 +110,15 @@ namespace PublicBicycles.Service
                             Debug.WriteLine(time.ToString() + "   借车，当前正在借车数量：" + hirings.Count);
                         }
                     }
+                    if(!hiredOrReturn )
+                    {
 
+                    }
+                    db.SaveChanges();
                 }
             }
+            HireService.Now = () => DateTime.Now;
+            HireService.SaveChanges = true;
             db.SaveChanges();
         }
 

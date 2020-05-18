@@ -6,6 +6,7 @@ namespace PublicBicycles.Models
     {
         [Key]
         public int ID { get; set; }
+        public int BicycleID { get; set; }
         public Station Station { get; set; }
         //public int StationID { get; set; }
         public bool CanHire { get; set; } = true;

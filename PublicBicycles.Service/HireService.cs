@@ -9,6 +9,8 @@ namespace PublicBicycles.Service
     public static class HireService
     {
         internal static Func<DateTime> Now { get; set; } = () => DateTime.Now;
+        internal static bool  SaveChanges { get; set; } = true;
+        internal static System.Collections.Generic.List<Hire> Hires { get; set; } 
         public static async Task<HireResult> HireAsync(PublicBicyclesContext db, int userID, int bicycleID, int stationID)
         {
             User user = db.Users.Find(userID);
@@ -37,8 +39,10 @@ namespace PublicBicycles.Service
             bicycle.Hiring = true;
             bicycle.Station = null;
             db.Update(bicycle);
-
-            await db.SaveChangesAsync();
+            if (SaveChanges)
+            {
+                await db.SaveChangesAsync();
+            }
             return new HireResult(hire, HireResultType.Succeed);
         }
 
@@ -57,6 +61,10 @@ namespace PublicBicycles.Service
             Station station = db.Stations.Find(stationID);
             Bicycle bicycle = db.Bicycles.Find(bicycleID);
             Hire hire = await GetHiringAsync(db, userID);
+            if(hire==null && Hires!=null && Hires.Any(p=>p.Hirer.ID==userID))
+            {
+                hire = Hires.First(p => p.Hirer.ID == userID);
+            }
             if (user == null || station == null || bicycle == null || hire == null)
             {
                 return new ReturnResult(null, ReturnResultType.DatabaseError);
@@ -84,8 +92,10 @@ namespace PublicBicycles.Service
             bicycle.Hiring = false;
             bicycle.Station = station;
             db.Update(bicycle);
-
-            await db.SaveChangesAsync();
+            if (SaveChanges)
+            {
+                await db.SaveChangesAsync();
+            }
             return new ReturnResult(hire, ReturnResultType.Succeed) ;
         }
     

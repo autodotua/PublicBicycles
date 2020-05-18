@@ -6,6 +6,7 @@ import Recharge from '../views/Recharge.vue'
 import Records from '../views/Records.vue'
 import Database from '../views/Database.vue'
 import Routes from '../views/Routes.vue'
+import Admin from '../views/Admin.vue'
 
 Vue.use(VueRouter)
 
@@ -19,6 +20,11 @@ Vue.use(VueRouter)
     path: '/database',
     name: 'Database',
     component: Database
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: Admin
   },
   {
     path: '/routes',

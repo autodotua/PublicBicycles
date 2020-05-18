@@ -15,6 +15,10 @@
           <el-menu-item index="home">
             <i class="el-icon-menu"></i>
             <span slot="title">地图</span>
+          </el-menu-item>    
+           <el-menu-item index="admin" v-show="isAdmin">
+            <i class="el-icon-menu" ></i>
+            <span slot="title">管理</span>
           </el-menu-item>
           <el-menu-item index="records">
             <i class="el-icon-document"></i>
@@ -108,6 +112,9 @@ body,
   height: 100%;
   padding: 0px !important;
   margin: 0px;
+}
+td{
+  padding: 4px 0!important;
 }
 </style>
 <style scoped>
