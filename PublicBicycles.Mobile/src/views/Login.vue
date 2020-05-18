@@ -46,7 +46,7 @@ export default Vue.extend({
         Cookies.set("userID", response.data.data.userID);
         Cookies.set("token", response.data.data.token);
         Cookies.set("username", response.data.data.user.username);
-        Cookies.set("admin", response.data.data.user.isAdmin);
+        Cookies.set("isAdmin", response.data.data.user.isAdmin);
         
          jump("");
       } else {

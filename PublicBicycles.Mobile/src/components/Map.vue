@@ -8,7 +8,7 @@
     <div id="map"></div>
   </div>
 </template>
-<script>
+<script >
 import Vue from "vue";
 import "../map/ClusterLayer";
 import Cookies from "js-cookie";
@@ -23,7 +23,8 @@ export default Vue.component("map-view", {
         source: new ol.source.Vector({
           features: []
         })
-      })
+      }),
+      routesLayer: undefined
     };
   },
   props: {
@@ -34,12 +35,6 @@ export default Vue.component("map-view", {
   computed: {},
   methods: {
     jump: jump,
-    getImageUrl(id) {
-      return getUrl("Home", "PublicBicyclesImage") + "/" + id;
-    },
-    hire(id) {
-      console.log(id);
-    },
     addLayer(url) {
       this.map.addLayer(
         new ol.layer.Tile({
@@ -49,23 +44,16 @@ export default Vue.component("map-view", {
         })
       );
     },
-    showBicycles(station) {
-      Vue.axios
-        .get(getUrl("Map", "Bicycles") + `/${station.id}`)
-        .then(response => {
-          this.bicycles = response.data.data;
-        })
-        .catch(showError);
-    },
-    getStyle(feature, scale = 1) {
+
+    getStyle(feature,selected) {
       return new ol.style.Style({
         image: new ol.style.Icon({
-          src: "../img/bicycle.png",
-          scale: scale / 6
+          src: `../img/bicycle${selected?"_selected":""}.png`,
+          scale: 1.0 / 6
         }),
 
         text: new ol.style.Text({
-          offsetY: 18 + scale * 6,
+          offsetY: 18 ,
           fill: new ol.style.Fill({
             color: "#000"
           }),
@@ -99,16 +87,21 @@ export default Vue.component("map-view", {
       this.map.addLayer(this.stationLayer);
       const selection = new ol.interaction.Select({
         condition: ol.events.condition.click,
-        style: feature => this.getStyle(feature, 2)
+        style: feature => this.getStyle(feature, true)
       });
       this.map.addInteraction(selection);
       selection.on("select", e => {
         console.log(e);
         if (e.selected.length > 0) {
-          this.stationName = e.selected[0].getProperties().object.name;
+          const station = e.selected[0].getProperties().object;
+          //this.stationName = (e as any).selected[0].getProperties().object.name;
           setTimeout(() => {
-            //这个事件触发太早了，不延迟的话，抽屉会识别到外部点击事件然后马上收回
-            this.$emit("select", e.selected[0].getProperties().object);
+            if (this.mapType == "routes") {
+              this.loadRoutes(station);
+            } else {
+              //这个事件触发太早了，不延迟的话，抽屉会识别到外部点击事件然后马上收回
+              this.$emit("select", station);
+            }
           }, 200);
         }
       });
@@ -144,10 +137,58 @@ export default Vue.component("map-view", {
         source: new ol.source.Vector({
           features: features
         }),
-        loadWhileAnimating: false,
         radius: 10
       });
       this.map.addLayer(heatmap);
+    },
+    loadRoutes(station) {
+      Vue.axios
+        .post(
+          getUrl("Analysis", "Routes"),
+          withToken({ stationID: station.id, days: 5 })
+        )
+        .then(response => {
+          const currentCoord = ol.proj.fromLonLat([station.lng, station.lat]);
+          const routes = response.data.data;
+          const features = [];
+          const addToFeatures = (items, type) => {
+            for (const stationID of Object.keys(items)) {
+              const targetStation = this.stations.find(p => p.id == stationID);
+              const targetCoord = ol.proj.fromLonLat([
+                targetStation.lng,
+                targetStation.lat
+              ]);
+              const feature = new Feature({
+                geometry: new ol.geom.LineString([currentCoord, targetCoord]),
+                weight: items[stationID],
+                type
+              });
+              features.push(feature);
+            }
+          };
+          addToFeatures(routes.in, "in");
+          addToFeatures(routes.out, "out");
+          if (this.routesLayer) {
+            this.map.removeLayer(this.routesLayer);
+          }
+          this.routesLayer = new ol.layer.Vector({
+            //maxResolution: 6, //越小越晚出现
+            source: new ol.source.Vector({
+              features: features
+            }),
+            style: feature => {
+              const t=feature.getProperties()["type"];
+              return new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                  color: t=="in"?"#33FF55":"#FF0000",
+                  width: feature.getProperties()["weight"]*3,
+                })
+              });
+            }
+          });
+          this.map.addLayer(this.routesLayer);
+        })
+        .catch(showError);
     },
     panTo(loc) {
       this.map.getView().animate({
@@ -169,6 +210,7 @@ export default Vue.component("map-view", {
         .get(getUrl("Map", "Stations"))
         .then(response => {
           const features = [];
+          this.stations = response.data.data;
           this.$emit("gotStations", response.data.data);
           for (const station of response.data.data) {
             const point = new ol.geom.Point(
@@ -182,6 +224,7 @@ export default Vue.component("map-view", {
           }
           switch (this.mapType) {
             case "normal":
+            case "routes":
               this.loadCluster(response.data.data);
               this.loadStations(features);
               break;

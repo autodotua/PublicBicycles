@@ -5,6 +5,7 @@ import Car from '../views/Car.vue'
 import Recharge from '../views/Recharge.vue'
 import Records from '../views/Records.vue'
 import Database from '../views/Database.vue'
+import Routes from '../views/Routes.vue'
 
 Vue.use(VueRouter)
 
@@ -18,6 +19,11 @@ Vue.use(VueRouter)
     path: '/database',
     name: 'Database',
     component: Database
+  },
+  {
+    path: '/routes',
+    name: 'Routes',
+    component: Routes
   },
   {
     path: '/',

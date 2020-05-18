@@ -11,6 +11,10 @@ export function withToken(obj: object): object {
     return request;
 }
 
+export function isAdmin(){
+   return Cookies.get("isAdmin")==="true";
+}
+
 export function formatDateTime(time: Date | string, includeTime = true): string {
     if (typeof time == "string") {
         time = new Date(time);

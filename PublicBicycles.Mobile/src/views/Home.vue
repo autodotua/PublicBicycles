@@ -55,7 +55,6 @@ import {
   jump,
   formatDateTime,
   showNotify,
-  stations
 } from "../common";
 import Map from "../components/Map";
 export default Vue.extend({
@@ -65,12 +64,13 @@ export default Vue.extend({
       bicycles: [],
       map: new Map({}),
       drawerDetail: false,
+      stations: [],
       station: undefined,
       currentHire: undefined,
       searchContent: ""
     };
   },
-  comments: {
+  components: {
     "map-view": Map
   },
   computed: {
@@ -157,7 +157,6 @@ export default Vue.extend({
         .catch(showError);
     }
   },
-  components: {},
   mounted: function() {
     this.$nextTick(function() {
       if (Cookies.get("userID") == undefined) {

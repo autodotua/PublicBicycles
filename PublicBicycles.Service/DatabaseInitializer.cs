@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.Geometries;
 using PublicBicycles.Models;
 using PublicBicycles.Service;
 using System;
@@ -21,8 +22,10 @@ namespace PublicBicycles.Service
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public  static void GenerateTestDatas(PublicBicyclesContext db)
+        public static void GenerateTestDatas(PublicBicyclesContext db)
         {
+            db.Database.EnsureDeleted();
+            db.Database.EnsureCreated();
             List<User> users = new List<User>();
             for (int i = 0; i < 1000; i++)
             {
@@ -39,7 +42,7 @@ namespace PublicBicycles.Service
             foreach (var line in stationTable.Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
             {
                 string[] items = line.Split(' ');
-                var station= new Station()
+                var station = new Station()
                 {
                     Name = items[1],
                     Count = int.Parse(items[2]),
@@ -48,7 +51,7 @@ namespace PublicBicycles.Service
                     Lng = double.Parse(items[7]),
                 };
                 stations.Add(station);
-                for(int i=0;i<station.Count/2;i++)
+                for (int i = 0; i < station.Count / 2; i++)
                 {
                     Bicycle bicycle = new Bicycle() { Station = station };
                     bicycles.Add(bicycle);
@@ -73,7 +76,17 @@ namespace PublicBicycles.Service
                     if (time.Hour >= 7 && hirings.Count > 5)
                     {
                         Hire hire = hirings[r.Next(0, hirings.Count - 1)];
-                        Station station = stations[r.Next(0, stations.Count - 1)];
+                        var p1 = new Point(hire.HireStation.Lng, hire.HireStation.Lat) { SRID = 4326 };
+                        Station station = null;
+                        double distance = 0;
+                        do
+                        {
+
+                            station = stations[r.Next(0, stations.Count - 1)];
+                            var p2 = new Point(station.Lng, station.Lat) { SRID = 4326 };
+                            distance = FzLib.Geography.Analysis.Calculate.Distance(p1, p2);
+                            //借车和还车的车站距离需要小于5000米
+                        } while (distance > 5000);
                         var @return = HireService.ReturnAsync(db, hire.Hirer.ID, hire.Bicycle.ID, station.ID).Result;
                         if (@return.Type == ReturnResultType.Succeed)
                         {
@@ -82,7 +95,7 @@ namespace PublicBicycles.Service
                         }
                     }
 
-                    if (hirings.Count < 100)
+                    if (hirings.Count < 100 && hirings.Count <21)
                     {
                         Station station = stations[r.Next(0, stations.Count - 1)];
                         Bicycle bicycle = db.Bicycles.Where(p => p.Station == station && !p.Hiring).First();
@@ -93,7 +106,7 @@ namespace PublicBicycles.Service
                             Debug.WriteLine(time.ToString() + "   借车，当前正在借车数量：" + hirings.Count);
                         }
                     }
-                  
+
                 }
             }
             db.SaveChanges();
@@ -106,14 +119,14 @@ namespace PublicBicycles.Service
         public static void Initialize(PublicBicyclesContext context)
         {
             context.Database.EnsureCreated();
-            if(!context.Users.Any())
+            if (!context.Users.Any())
             {
                 context.Users.Add(new User()
                 {
                     IsAdmin = true,
                     Username = "admin",
                     Password = UserService.CreateMD5("admin")
-                }) ;
+                });
                 context.SaveChanges();
             }
         }

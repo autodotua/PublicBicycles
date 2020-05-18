@@ -20,6 +20,10 @@
             <i class="el-icon-document"></i>
             <span slot="title">借车记录</span>
           </el-menu-item>
+          <el-menu-item index="routes" v-show="isAdmin">
+            <i class="el-icon-document"></i>
+            <span slot="title">路线分析</span>
+          </el-menu-item>
         </el-menu>
       </el-drawer>
     </el-container>
@@ -28,7 +32,7 @@
 <script lang="ts">
 import Vue from "vue";
 import Cookies from "js-cookie";
-import { jump } from "./common";
+import { jump, isAdmin } from "./common";
 export default Vue.extend({
   name: "App",
   data: function() {
@@ -55,6 +59,7 @@ export default Vue.extend({
     });
   },
   methods: {
+    isAdmin:isAdmin,
     jump: jump,
     menuSelect(index: number) {
       console.log(index);
@@ -77,6 +82,7 @@ export default Vue.extend({
         Cookies.remove("username");
         Cookies.remove("userID");
         Cookies.remove("token");
+        Cookies.remove("isAdmin");
         location.reload();
       });
     }
