@@ -24,6 +24,19 @@ namespace PublicBicycles.Service
             };
             db.Bicycles.Add(bicycle);
             await db.SaveChangesAsync();
+        }   
+        public async static Task AddStationAsync(PublicBicyclesContext db ,string name,string address,double lng,double lat,int count)
+        {
+            Station station = new Station()
+            {
+                Name = name,
+                Address = address,
+                Lng = lng,
+                Lat = lat,
+                Count = count
+            };
+            db.Stations.Add(station);
+            await db.SaveChangesAsync();
         }
         public async static Task DeleteStationAsync(PublicBicyclesContext db, int stationID)
         {
