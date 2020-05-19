@@ -18,18 +18,20 @@ export default Vue.component("map-view", {
   data() {
     return {
       stations: [],
+      selecting: false,
+      markerLayer: undefined,
       map: new Map({}),
-      stationLayer: new ol.layer.Vector({
-        source: new ol.source.Vector({
-          features: []
-        })
-      }),
+      stationLayer: undefined,
+      clusterLayer: undefined,
       routesLayer: undefined
     };
   },
   props: {
     mapType: {
       default: "normal"
+    },
+    enableClick: {
+      default: false
     }
   },
   computed: {},
@@ -45,10 +47,10 @@ export default Vue.component("map-view", {
       );
     },
 
-    getStyle(feature,selected) {
+    getStyle(feature, selected) {
       return new ol.style.Style({
         image: new ol.style.Icon({
-          src: `../img/bicycle${selected?"_selected":""}.png`,
+          src: `../img/bicycle${selected ? "_selected" : ""}.png`,
           scale: 1.0 / 6
         }),
 
@@ -84,16 +86,65 @@ export default Vue.component("map-view", {
       this.addLayer(
         "http://t0.tianditu.com/cva_w/wmts?service=WMTS&request=GetTile&version=1.0.0&layer=cva&style=default&TILEMATRIXSET=w&format=tiles&height=256&width=256&tilematrix={z}&tilerow={y}&tilecol={x}&tk=9396357d4b92e8e197eafa646c3c541d"
       );
-      this.map.addLayer(this.stationLayer);
+      //this.map.addLayer(this.stationLayer);
+
+      if (this.enableClick) {
+        this.map.on("click", event => {
+          setTimeout(() => {
+            if (this.selecting) {
+              this.selecting = false;
+              return;
+            }
+            const coord = ol.proj.transform(
+              event.coordinate,
+              "EPSG:3857",
+              "EPSG:4326"
+            );
+            const point = new ol.geom.Point(event.coordinate);
+            const feature = new Feature({
+              geometry: point
+            });
+            if (this.markerLayer) {
+              this.map.removeLayer(this.markerLayer);
+            } else {
+              this.markerLayer = new ol.layer.Vector({
+                name: "stations",
+                maxResolution: 6, //越小越晚出现
+                source: new ol.source.Vector({
+                  features: [feature]
+                }),
+                style: () => {
+                  return new ol.style.Style({
+                    image: new ol.style.Icon({
+                      src: `../img/marker.png`,
+                      scale: 1.0 / 3
+                    })
+                  });
+                }
+              });
+              this.map.addLayer(this.markerLayer);
+              this.panTo(coord);
+              this.$emit("click", coord);
+            }
+          }, 100);
+        });
+      }
+
       const selection = new ol.interaction.Select({
         condition: ol.events.condition.click,
+        layers: layer => {
+          return layer.get("name") == "stations";
+        },
         style: feature => this.getStyle(feature, true)
       });
       this.map.addInteraction(selection);
       selection.on("select", e => {
-        console.log(e);
         if (e.selected.length > 0) {
           const station = e.selected[0].getProperties().object;
+          if (!station) {
+            return;
+          }
+          this.selecting = true;
           //this.stationName = (e as any).selected[0].getProperties().object.name;
           setTimeout(() => {
             if (this.mapType == "routes") {
@@ -119,10 +170,12 @@ export default Vue.component("map-view", {
         data: data,
         style: null
       });
+      this.clusterLayer = cluster;
       this.map.addLayer(cluster);
     },
     loadStations(features) {
       const layer = new ol.layer.Vector({
+        name: "stations",
         maxResolution: 6, //越小越晚出现
         source: new ol.source.Vector({
           features: features
@@ -177,11 +230,11 @@ export default Vue.component("map-view", {
               features: features
             }),
             style: feature => {
-              const t=feature.getProperties()["type"];
+              const t = feature.getProperties()["type"];
               return new ol.style.Style({
                 stroke: new ol.style.Stroke({
-                  color: t=="in"?"#33FF55":"#FF0000",
-                  width: feature.getProperties()["weight"]*3,
+                  color: t == "in" ? "#33FF55" : "#FF0000",
+                  width: feature.getProperties()["weight"] * 3
                 })
               });
             }
@@ -197,15 +250,14 @@ export default Vue.component("map-view", {
         zoom: 16,
         center: ol.proj.fromLonLat(loc)
       });
-    }
-  },
-  components: {},
-  mounted: function() {
-    this.$nextTick(function() {
-      if (Cookies.get("userID") == undefined) {
-        return;
+    },
+    loadDatas() {
+      if (this.clusterLayer) {
+        this.map.removeLayer(this.clusterLayer);
       }
-      this.initMap();
+      if (this.stationLayer) {
+        this.map.removeLayer(this.stationLayer);
+      }
       Vue.axios
         .get(getUrl("Map", "Stations"))
         .then(response => {
@@ -229,11 +281,23 @@ export default Vue.component("map-view", {
               this.loadStations(features);
               break;
             case "heatmap":
+              this.loadCluster(response.data.data);
+              this.loadStations(features);
               this.loadHeatmap(features);
               break;
           }
         })
         .catch(showError);
+    }
+  },
+  components: {},
+  mounted: function() {
+    this.$nextTick(function() {
+      if (Cookies.get("userID") == undefined) {
+        return;
+      }
+      this.initMap();
+      this.loadDatas();
     });
   }
 });

@@ -29,6 +29,12 @@ namespace PublicBicycles.Service
 
             HireService.SaveChanges = false;
             List<User> users = new List<User>();
+            db.Add(new User()
+            {
+                Username = "admin",
+                Password = UserService.CreateMD5("admin"),
+                IsAdmin = true,
+            });
             for (int i = 0; i < 1000; i++)
             {
                 users.Add(new User()

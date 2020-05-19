@@ -21,7 +21,7 @@ namespace PublicBicycles.API.Controllers
         }
         [HttpPost]
         [Route("Bicycle")]
-        public async Task<ResponseData<object>> BicycleAsync([FromBody] BicycleRequest request)
+        public async Task<ResponseData<object>> BicycleAsync([FromBody] CURDRequest<Bicycle> request)
         {
             if (!request.IsValid(true))
             {
@@ -31,10 +31,10 @@ namespace PublicBicycles.API.Controllers
             switch (request.Type)
             {
                 case "add":
-                    await BicycleAndStationService.AddBicycleAsync(db, request.BicycleID, request.StationID);
+                    await BicycleAndStationService.AddBicycleAsync(db, request.Item.BicycleID, request.Item.Station.ID);
                     return new ResponseData<object>();
                 case "delete":
-                    await BicycleAndStationService.DeleteBicycleAsync(db, request.BicycleID);
+                    await BicycleAndStationService.DeleteBicycleAsync(db, request.Item.ID);
                     return new ResponseData<object>();
                 default:
                     return new ResponseData<object>(null, false, "不支持的操作类型");
@@ -42,7 +42,7 @@ namespace PublicBicycles.API.Controllers
         }
         [HttpPost]
         [Route("Station")]
-        public async Task<ResponseData<object>> StationAsync([FromBody] StationRequest request)
+        public async Task<ResponseData<object>> StationAsync([FromBody] CURDRequest<Station> request)
         {
             if (!request.IsValid(true))
             {
@@ -52,10 +52,24 @@ namespace PublicBicycles.API.Controllers
             switch (request.Type)
             {
                 case "add":
-
+                    await BicycleAndStationService.AddStationAsync(db,
+                        request.Item.Name,
+                        request.Item.Address,
+                        request.Item.Lng,
+                        request.Item.Lat,
+                        request.Item.Count);
+                    return new ResponseData<object>();
+                case "edit":
+                    await BicycleAndStationService.ModifyStationAsync(db,
+                        request.Item.ID,
+                        request.Item.Name,
+                        request.Item.Address,
+                        request.Item.Lng,
+                        request.Item.Lat,
+                        request.Item.Count);
                     return new ResponseData<object>();
                 case "delete":
-                    await BicycleAndStationService.DeleteStationAsync(db, request.StationID);
+                    await BicycleAndStationService.DeleteStationAsync(db, request.Item.ID);
                     return new ResponseData<object>();
                 default:
                     return new ResponseData<object>(null, false, "不支持的操作类型");
@@ -63,15 +77,9 @@ namespace PublicBicycles.API.Controllers
         }
     }
 
-    public class BicycleRequest : UserToken
+    public class CURDRequest<T> : UserToken where T : class, new()
     {
-        public int BicycleID { get; set; }
-        public int StationID { get; set; }
-        public string Type { get; set; }
-    }
-    public class StationRequest : UserToken
-    {
-        public int StationID { get; set; }
+        public T Item { get; set; }
         public string Type { get; set; }
     }
 }

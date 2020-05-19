@@ -1,6 +1,13 @@
 <template>
   <div class="container">
-    <map-view ref="map" @select="stationSelected" map-type="normal" @gotStations="gotStations"></map-view>
+    <map-view
+      ref="map"
+      @select="stationSelected"
+      map-type="normal"
+      :enableClick="true"
+      @gotStations="gotStations"
+      @click="mapClick"
+    ></map-view>
 
     <el-autocomplete
       class="search"
@@ -29,7 +36,8 @@
           <i class="el-icon-arrow-down el-icon--right"></i>
         </span>
         <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item command="deleteStation">删除车站</el-dropdown-item>
+          <el-dropdown-item command="deleteStation">删除租赁点</el-dropdown-item>
+          <el-dropdown-item command="editStation">修改租赁点</el-dropdown-item>
           <el-dropdown-item command="addBicycle">新增自行车</el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
@@ -47,22 +55,33 @@
     </el-drawer>
     <el-drawer
       title
-      :visible.sync="showAddPanel"
+      :visible.sync="showSidePanel"
       :with-header="false"
       size="180px"
       class="bicycles"
     >
       <a class="station-title" style="float:left">
-        <b>添加自行车</b>
+        <b>添加{{addingBicycle?"自行车":"租赁点"}}</b>
       </a>
-      <div v-show="showAddPanel" style="margin: 48px 12px 0 12px">
+      <div v-show="addingBicycle" class="add-form">
         <a>自行车ID：</a>
-        <br />
         <el-input v-model="bicycle.bicycleID" size="small"></el-input>
-        <br />
-        <br />
         <el-button type="primary" @click="addBicycle" size="small">确定</el-button>
-        <el-button @click="showAddPanel=false" size="small">取消</el-button>
+        <el-button @click="addingBicycle=false" size="small">取消</el-button>
+      </div>
+      <div v-show="addingStation" class="add-form">
+        <a>名称：</a>
+        <el-input v-model="station.name" size="small"></el-input>
+        <a>地址：</a>
+        <el-input v-model="station.address" size="small"></el-input>
+        <a>桩位：</a>
+        <el-input-number v-model="station.count" size="small"></el-input-number>
+        <a>经度：</a>
+        <el-input v-model="station.lng" size="small" type="number"></el-input>
+        <a>纬度：</a>
+        <el-input v-model="station.lat" size="small" type="number"></el-input>
+        <el-button type="primary" @click="addOrEditStation" size="small">确定</el-button>
+        <el-button @click="addingStation=false" size="small">取消</el-button>
       </div>
     </el-drawer>
   </div>
@@ -85,19 +104,30 @@ export default Vue.extend({
   data() {
     return {
       bicycle: { bicycleID: 0 },
+      operation: "",
       bicycles: [],
       map: new Map({}),
       drawerDetail: false,
       stations: [],
-      station: undefined,
+      station: {
+        name: "",
+        address: "",
+        count: 25,
+        lng: 0,
+        lat: 0
+      },
       searchContent: "",
-      showAddPanel: false
+      addingBicycle: false,
+      addingStation: false
     };
   },
   components: {
     "map-view": Map
   },
   computed: {
+    showSidePanel() {
+      return this.addingBicycle || this.addingStation;
+    },
     searchStyle() {
       if (this.currentHire == null) {
         return "top:72px;";
@@ -106,61 +136,98 @@ export default Vue.extend({
     }
   },
   methods: {
+    mapClick(coord) {
+      (this.addingStation = true),
+        (this.station = {
+          name: "",
+          address: "",
+          count: 25,
+          lng: coord[0],
+          lat: coord[1]
+        });
+      this.operation = "add";
+    },
+    addOrEditStation() {
+      Vue.axios
+        .post(
+          getUrl("Admin", "Station"),
+          withToken({
+            item: this.station,
+            type: this.operation
+          })
+        )
+        .then(response => {
+          if (response.data.succeed) {
+            showNotify((this.operation=="edit"?"编辑":"添加")+"成功");
+            this.$refs.map.loadDatas();
+            this.addingStation = false;
+            this.stations.slice(this.stations.indexOf(this.station), 1);
+          } else {
+            showError(response.data.message);
+          }
+        })
+        .catch(showError);
+    },
     handleDropdownCommand(cmd) {
       setTimeout(() => {
         switch (cmd) {
           case "deleteStation":
             this.deleteStation();
             break;
-          case "deleteBicycle":
+          case "editStation":
+            this.addingStation=true;
+            this.operation="edit";
             break;
           case "addBicycle":
-            this.showAddPanel = true;
+            this.addingBicycle = true;
             this.drawerDetail = false;
             break;
         }
       }, 100);
     },
-    deleteStation(){
-   this.$confirm('是否删除该站点?', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
+    deleteStation() {
+      this.$confirm("是否删除该站点?", "提示", {
+        confirmButtonText: "确定",
+        cancelButtonText: "取消",
+        type: "warning"
+      }).then(() => {
         Vue.axios
-        .post(
-          getUrl("Admin", "Station"),
-          withToken({
-            stationID: this.station.id,
-            type: "delete"
+          .post(
+            getUrl("Admin", "Station"),
+            withToken({
+              item: { id: this.station.id },
+              type: "delete"
+            })
+          )
+          .then(response => {
+            if (response.data.succeed) {
+              showNotify("删除成功");
+              this.$refs.map.loadDatas();
+              this.drawerDetail = false;
+              this.stations.slice(this.stations.indexOf(this.station), 1);
+            } else {
+              showError(response.data.message);
+            }
           })
-        )
-        .then(response => {
-          if (response.data.succeed) {
-            showNotify("删除成功，将在刷新后消失");
-            this.drawerDetail=false
-            this.stations.slice(this.stations.indexOf(this.station),1);
-          } else {
-            showError(response.data.message);
-          }
-        })
-        .catch(showError);
-        })
+          .catch(showError);
+      });
     },
     addBicycle() {
-        Vue.axios
+      Vue.axios
         .post(
           getUrl("Admin", "Bicycle"),
           withToken({
-            bicycleID: this.bicycle.bicycleID,
-            stationID: this.station.id,
+            item: {
+              bicycleID: this.bicycle.bicycleID,
+              station: { id: this.station.id }
+            },
             type: "add"
           })
         )
         .then(response => {
           if (response.data.succeed) {
             showNotify("新建成功");
-            this.showAddPanel=false
+            this.addingBicycle = false;
           } else {
             showError(response.data.message);
           }
@@ -172,15 +239,14 @@ export default Vue.extend({
         .post(
           getUrl("Admin", "Bicycle"),
           withToken({
-            bicycleID: bicycle.id,
-            stationID: this.station.id,
+            item: { id: bicycle.id, bicycleID: 0 },
             type: "delete"
           })
         )
         .then(response => {
           if (response.data.succeed) {
             showNotify("删除成功");
-            this.bicycles.splice(this.bicycles.indexOf(bicycle),1);
+            this.bicycles.splice(this.bicycles.indexOf(bicycle), 1);
           } else {
             showError(response.data.message);
           }
@@ -260,5 +326,18 @@ export default Vue.extend({
   /* top: 120px; */
   left: 24px;
   right: 24px;
+}
+.add-form {
+  margin: 48px 12px 0 12px;
+}
+.add-form a {
+  display: block;
+  margin-top: 6px;
+  margin-bottom: 6px;
+}
+.add-form .el-input {
+  display: block;
+  margin-top: 6px;
+  margin-bottom: 12px;
 }
 </style>

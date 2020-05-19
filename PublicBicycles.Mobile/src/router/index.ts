@@ -7,6 +7,7 @@ import Records from '../views/Records.vue'
 import Database from '../views/Database.vue'
 import Routes from '../views/Routes.vue'
 import Admin from '../views/Admin.vue'
+import Heatmap from '../views/Heatmap.vue'
 
 Vue.use(VueRouter)
 
@@ -25,6 +26,11 @@ Vue.use(VueRouter)
     path: '/admin',
     name: 'Admin',
     component: Admin
+  },
+  {
+    path: '/heatmap',
+    name: 'Heatmap',
+    component: Heatmap
   },
   {
     path: '/routes',

@@ -13,19 +13,23 @@
       <el-drawer title :visible.sync="menu" :with-header="false" direction="ltr" size="240px">
         <el-menu router="true" @select="menuSelect">
           <el-menu-item index="home">
-            <i class="el-icon-menu"></i>
+            <i class="el-icon-map-location"></i>
             <span slot="title">地图</span>
           </el-menu-item>    
            <el-menu-item index="admin" v-show="isAdmin">
-            <i class="el-icon-menu" ></i>
+            <i class="el-icon-s-tools" ></i>
             <span slot="title">管理</span>
           </el-menu-item>
           <el-menu-item index="records">
-            <i class="el-icon-document"></i>
+            <i class="el-icon-finished"></i>
             <span slot="title">借车记录</span>
           </el-menu-item>
+          <el-menu-item index="heatmap" v-show="isAdmin">
+            <i class="el-icon-data-analysis"></i>
+            <span slot="title">点位热力图</span>
+          </el-menu-item>
           <el-menu-item index="routes" v-show="isAdmin">
-            <i class="el-icon-document"></i>
+            <i class="el-icon-data-analysis"></i>
             <span slot="title">路线分析</span>
           </el-menu-item>
         </el-menu>
