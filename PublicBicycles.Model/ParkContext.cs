@@ -14,11 +14,25 @@ namespace PublicBicycles.Models
         public PublicBicyclesContext() : base()
         {
         }
-
+        /// <summary>
+        /// 自行车
+        /// </summary>
         public DbSet<Bicycle> Bicycles { get; set; }
+        /// <summary>
+        /// 借车记录
+        /// </summary>
         public DbSet<Hire> Hires { get; set; }
+        /// <summary>
+        /// 租赁点
+        /// </summary>
         public DbSet<Station> Stations { get; set; }
+        /// <summary>
+        /// 用户
+        /// </summary>
         public DbSet<User> Users { get; set; }
+        /// <summary>
+        /// 配置（无用）
+        /// </summary>
         public DbSet<Config> Configs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

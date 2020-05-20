@@ -22,12 +22,16 @@ namespace PublicBicycles.Service
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        public static void GenerateTestDatas(PublicBicyclesContext db)
+        public static void GenerateTestDatas(PublicBicyclesContext db,int days)
         {
+            Debug.WriteLine("开始生成测试数据");
             db.Database.EnsureDeleted();
             db.Database.EnsureCreated();
 
             HireService.SaveChanges = false;
+
+
+            Debug.WriteLine("开始添加用户");
             List<User> users = new List<User>();
             db.Add(new User()
             {
@@ -44,6 +48,9 @@ namespace PublicBicycles.Service
                 });
             }
             db.AddRange(users);
+
+
+            Debug.WriteLine("开始添加租赁点与自行车");
             int bicycleID = 1;
             List<Station> stations = new List<Station>();
             List<Bicycle> bicycles = new List<Bicycle>();
@@ -70,9 +77,11 @@ namespace PublicBicycles.Service
             db.AddRange(bicycles);
             db.SaveChanges();
 
+
+            Debug.WriteLine("开始生成借车记");
             Random r = new Random();
             List<Hire> hirings = new List<Hire>();
-            DateTime fromDate = DateTime.Today.AddDays(-2);
+            DateTime fromDate = DateTime.Today.AddDays(-days);
             DateTime toDate = DateTime.Today;
             for (DateTime date = fromDate; date < toDate; date = date.AddDays(1))
             {
@@ -126,6 +135,7 @@ namespace PublicBicycles.Service
             HireService.Now = () => DateTime.Now;
             HireService.SaveChanges = true;
             db.SaveChanges();
+            Debug.WriteLine("完成");
         }
 
         /// <summary>

@@ -10,13 +10,13 @@ namespace PublicBicycles.API.Controllers
     {
         [HttpPost]
         [Route("Fake")]
-        public ResponseData<object> GenerateTestDatasAsync([FromBody] UserToken request)
+        public ResponseData<object> GenerateTestDatasAsync([FromBody] TestDatasRequest request)
         {
             if (!request.IsValid(true))
             {
                 return new ResponseData<object>(null, false, "用户验证失败");
             }
-            DatabaseInitializer.GenerateTestDatas(db);
+            DatabaseInitializer.GenerateTestDatas(db,request.Days);
             return new ResponseData<object>();
         }
         [HttpPost]
@@ -27,15 +27,18 @@ namespace PublicBicycles.API.Controllers
             {
                 return new ResponseData<object>(null, false, "用户验证失败");
             }
-
+            bool result;
             switch (request.Type)
             {
                 case "add":
-                    await BicycleAndStationService.AddBicycleAsync(db, request.Item.BicycleID, request.Item.Station.ID);
-                    return new ResponseData<object>();
+                    result = await BicycleAndStationService.AddBicycleAsync(db, request.Item.BicycleID, request.Item.Station.ID);
+                    return new ResponseData<object>(null, result);
+                case "edit":
+                    result = await BicycleAndStationService.ModifyBicycleAsync(db, request.Item.ID, request.Item.BicycleID, request.Item.CanHire);
+                    return new ResponseData<object>(null, result);
                 case "delete":
-                    await BicycleAndStationService.DeleteBicycleAsync(db, request.Item.ID);
-                    return new ResponseData<object>();
+                    result = await BicycleAndStationService.DeleteBicycleAsync(db, request.Item.ID);
+                    return new ResponseData<object>(null, result);
                 default:
                     return new ResponseData<object>(null, false, "不支持的操作类型");
             }
@@ -48,7 +51,7 @@ namespace PublicBicycles.API.Controllers
             {
                 return new ResponseData<object>(null, false, "用户验证失败");
             }
-
+            bool result;
             switch (request.Type)
             {
                 case "add":
@@ -60,25 +63,31 @@ namespace PublicBicycles.API.Controllers
                         request.Item.Count);
                     return new ResponseData<object>();
                 case "edit":
-                    await BicycleAndStationService.ModifyStationAsync(db,
-                        request.Item.ID,
-                        request.Item.Name,
-                        request.Item.Address,
-                        request.Item.Lng,
-                        request.Item.Lat,
-                        request.Item.Count);
-                    return new ResponseData<object>();
+                    result = await BicycleAndStationService.ModifyStationAsync(db,
+                           request.Item.ID,
+                           request.Item.Name,
+                           request.Item.Address,
+                           request.Item.Lng,
+                           request.Item.Lat,
+                           request.Item.Count);
+                    return new ResponseData<object>(null, result);
                 case "delete":
-                    await BicycleAndStationService.DeleteStationAsync(db, request.Item.ID);
-                    return new ResponseData<object>();
+                    result = await BicycleAndStationService.DeleteStationAsync(db, request.Item.ID);
+                    return new ResponseData<object>(null, result);
                 default:
                     return new ResponseData<object>(null, false, "不支持的操作类型");
             }
         }
     }
-
+    public class TestDatasRequest : UserToken
+    {
+        public int Days { get; set; } = 2;
+    }
     public class CURDRequest<T> : UserToken where T : class, new()
     {
+        /// <summary>
+        /// 增删查改的对象
+        /// </summary>
         public T Item { get; set; }
         public string Type { get; set; }
     }

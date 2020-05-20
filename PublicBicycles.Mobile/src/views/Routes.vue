@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <map-view ref="map" @select="stationSelected" map-type="routes" @gotStations="gotStations"></map-view>
+    <map-view ref="map" map-type="routes" @gotStations="gotStations"></map-view>
 
     <el-autocomplete
       class="search"
@@ -51,7 +51,6 @@ export default Vue.extend({
   },
   methods: {
     searchSelect(e) {
-      console.log("选择到了", e);
       this.$refs.map.panTo([e.lng, e.lat]);
     },
     gotStations(e) {

@@ -7,22 +7,37 @@ namespace PublicBicycles.Service
 {
     public static class BicycleAndStationService
     {
-        public async static Task DeleteBicycleAsync(PublicBicyclesContext db, int bicycleID)
+        /// <summary>
+        /// 删除自行车
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="bicycleID"></param>
+        /// <returns></returns>
+        public async static Task<bool> DeleteBicycleAsync(PublicBicyclesContext db, int bicycleID)
         {
             Bicycle bicycle = await db.Bicycles.Where(p => p.ID == bicycleID).Include(p => p.Station).FirstOrDefaultAsync();
-            if (bicycle != null)
+            if (bicycle == null)
             {
-                bicycle.Deleted = true;
-                db.Update(bicycle);
+                return false;
             }
+            bicycle.Deleted = true;
+            db.Update(bicycle);
             bicycle.Station.BicycleCount--;
             db.Update(bicycle.Station);
             await db.SaveChangesAsync();
+            return true;
         }
+        /// <summary>
+        /// 新增自行车
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="bicycleID"></param>
+        /// <param name="stationID"></param>
+        /// <returns></returns>
         public async static Task<bool> AddBicycleAsync(PublicBicyclesContext db, int bicycleID, int stationID)
         {
-            var station = db.Stations.Find(stationID);
-            if (station == null || station.BicycleCount >= station.Count)
+            var station = await db.Stations.FindAsync(stationID);
+            if (station == null || station.BicycleCount >= station.Count)//无法停放更多车辆
             {
                 return false;
             }
@@ -37,6 +52,29 @@ namespace PublicBicycles.Service
             await db.SaveChangesAsync();
             return true;
         }
+        public async static Task<bool> ModifyBicycleAsync(PublicBicyclesContext db, int id, int bicycleID, bool canHire)
+        {
+            Bicycle bicycle = await db.Bicycles.FindAsync(id);
+            if (bicycle == null)
+            {
+                return false;
+            }
+            bicycle.CanHire = canHire;
+            bicycle.BicycleID = bicycleID;
+            db.Bicycles.Update(bicycle);
+            await db.SaveChangesAsync();
+            return true;
+        }
+        /// <summary>
+        /// 新增租赁点
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="name"></param>
+        /// <param name="address"></param>
+        /// <param name="lng"></param>
+        /// <param name="lat"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
         public async static Task AddStationAsync(PublicBicyclesContext db, string name, string address, double lng, double lat, int count)
         {
             Station station = new Station()
@@ -50,14 +88,25 @@ namespace PublicBicycles.Service
             db.Stations.Add(station);
             await db.SaveChangesAsync();
         }
+        /// <summary>
+        /// 修改租赁点信息
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="id"></param>
+        /// <param name="name"></param>
+        /// <param name="address"></param>
+        /// <param name="lng"></param>
+        /// <param name="lat"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
         public async static Task<bool> ModifyStationAsync(PublicBicyclesContext db, int id, string name, string address, double lng, double lat, int count)
         {
-            Station station = db.Stations.Find(id);
+            Station station = await db.Stations.FindAsync(id);
             if (station == null)
             {
                 return false;
             }
-            if (count > station.BicycleCount)
+            if (count < station.BicycleCount)//租赁点新的容量小于当前车辆数
             {
                 return false;
             }
@@ -70,15 +119,23 @@ namespace PublicBicycles.Service
             await db.SaveChangesAsync();
             return true;
         }
-        public async static Task DeleteStationAsync(PublicBicyclesContext db, int stationID)
+        /// <summary>
+        /// 删除租赁点
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="stationID"></param>
+        /// <returns></returns>
+        public async static Task<bool> DeleteStationAsync(PublicBicyclesContext db, int stationID)
         {
-            Station station = db.Stations.Find(stationID);
-            if (station != null)
+            Station station = await db.Stations.FindAsync(stationID);
+            if (station == null)
             {
-                station.Deleted = true;
-                db.Update(station);
+                return false;
             }
+            station.Deleted = true;
+            db.Update(station);
             await db.SaveChangesAsync();
+            return true;
         }
     }
 }

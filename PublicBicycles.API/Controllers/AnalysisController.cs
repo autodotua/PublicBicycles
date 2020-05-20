@@ -6,6 +6,11 @@ namespace PublicBicycles.API.Controllers
 {
     public class AnalysisController : PublicBicyclesControllerBase
     {
+        /// <summary>
+        /// 获取某一个租赁点的借车还车相互联系的租赁点
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("Routes")]
         public async Task<ResponseData<object>> GetRoutesAsync([FromBody] RouteRequest request)

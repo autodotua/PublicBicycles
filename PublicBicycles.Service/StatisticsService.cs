@@ -14,7 +14,7 @@ namespace PublicBicycles.Service
     public static class StatisticsService
     {
         /// <summary>
-        /// 获取最近几天每一天的停车数量
+        /// 无用方法
         /// </summary>
         /// <param name="db"></param>
         /// <param name="days"></param>
@@ -35,6 +35,13 @@ namespace PublicBicycles.Service
             return result;
         }
 
+        /// <summary>
+        /// 获取某一个站点最近几天借车和还车的相互联系的租赁点
+        /// </summary>
+        /// <param name="db"></param>
+        /// <param name="stationID"></param>
+        /// <param name="days"></param>
+        /// <returns></returns>
         public static async Task<Route> GetStationRoutesAsync(PublicBicyclesContext db,int stationID,int days)
         {
             //起始时间
@@ -50,8 +57,10 @@ namespace PublicBicycles.Service
                     .Where(p=>p.ReturnStation!=null)
                     .Include(p=>p.ReturnStation)
                     .ToListAsync();
-            var outCount = outs.GroupBy(p => p.ReturnStation.ID).ToDictionary(p => p.Key, p => p.Count());
-            var intCount = ins.GroupBy(p => p.HireStation.ID).ToDictionary(p => p.Key, p => p.Count());
+            
+            //<int,int>的前一个int是StationID，后一个int是来自/前往该租赁点的自行车数量
+            Dictionary<int, int> outCount = outs.GroupBy(p => p.ReturnStation.ID).ToDictionary(p => p.Key, p => p.Count());
+            Dictionary<int, int> intCount = ins.GroupBy(p => p.HireStation.ID).ToDictionary(p => p.Key, p => p.Count());
             return new Route()
             {
                 In = intCount,
@@ -61,6 +70,9 @@ namespace PublicBicycles.Service
     }
     public class Route
     {
+        /// <summary>
+        /// 入站（归还）的车辆的来源
+        /// </summary>
         public Dictionary<int, int> In { get; set; } = new Dictionary<int, int>();
         public Dictionary<int, int> Out { get; set; } = new Dictionary<int, int>();
     }

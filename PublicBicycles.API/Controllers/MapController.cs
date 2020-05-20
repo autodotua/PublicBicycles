@@ -16,6 +16,10 @@ namespace PublicBicycles.API.Controllers
     /// </summary>
     public class MapController : PublicBicyclesControllerBase
     {
+        /// <summary>
+        /// 获取所有租赁点的数据
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [Route("Stations")]
         public async Task<ResponseData<List<Station>>> StationsAsync()
@@ -26,13 +30,18 @@ namespace PublicBicycles.API.Controllers
                 .ToListAsync();
             return new ResponseData<List<Station>>(stations);
         }
+        /// <summary>
+        /// 获取某一个租赁点所拥有的所有自行车信息
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route("Bicycles/{id}")]
         public async Task<ResponseData<List<Bicycle>>> BicyclesAsync(int id)
         {
             var bicycles =await db.Bicycles
                 .Where(p => p.Station.ID == id)
-                .Where(p=>p.CanHire)
+                //.Where(p=>p.CanHire)
                 .Where(p=>!p.Deleted)
                 .ToListAsync();
 

@@ -38,7 +38,7 @@
         <el-dropdown-menu slot="dropdown">
           <el-dropdown-item command="deleteStation">删除租赁点</el-dropdown-item>
           <el-dropdown-item command="editStation">修改租赁点</el-dropdown-item>
-          <el-dropdown-item command="addBicycle">新增自行车</el-dropdown-item>
+          <el-dropdown-item command="addOrEditBicycle">新增自行车</el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
 
@@ -46,6 +46,8 @@
         <el-table-column prop="bicycleID" label="ID" width="160"></el-table-column>
         <el-table-column fixed="right" label="操作" width="100">
           <template slot-scope="scope">
+            <el-button type="text" size="small" @click="editBicycle(scope.row)">修改</el-button>
+
             <el-popconfirm title="确认删除？" @onConfirm="deleteBicycle(scope.row)">
               <el-button slot="reference" type="text" size="small">删除</el-button>
             </el-popconfirm>
@@ -61,12 +63,19 @@
       class="bicycles"
     >
       <a class="station-title" style="float:left">
-        <b>添加{{addingBicycle?"自行车":"租赁点"}}</b>
+        <b>{{addingBicycle?"自行车":"租赁点"}}</b>
       </a>
       <div v-show="addingBicycle" class="add-form">
         <a>自行车ID：</a>
         <el-input v-model="bicycle.bicycleID" size="small"></el-input>
-        <el-button type="primary" @click="addBicycle" size="small">确定</el-button>
+        <a>是否可借：</a>
+        <el-switch
+          style="display: block"
+          v-model="bicycle.canHire"
+          active-color="#13ce66"
+          inactive-color="#ff4949"
+        ></el-switch>
+        <el-button type="primary" @click="addOrEditBicycle" size="small">确定</el-button>
         <el-button @click="addingBicycle=false" size="small">取消</el-button>
       </div>
       <div v-show="addingStation" class="add-form">
@@ -103,7 +112,7 @@ export default Vue.extend({
   name: "Home",
   data() {
     return {
-      bicycle: { bicycleID: 0 },
+      bicycle: { bicycleID: 0, canHire: true },
       operation: "",
       bicycles: [],
       map: new Map({}),
@@ -158,7 +167,7 @@ export default Vue.extend({
         )
         .then(response => {
           if (response.data.succeed) {
-            showNotify((this.operation=="edit"?"编辑":"添加")+"成功");
+            showNotify((this.operation == "edit" ? "编辑" : "添加") + "成功");
             this.$refs.map.loadDatas();
             this.addingStation = false;
             this.stations.slice(this.stations.indexOf(this.station), 1);
@@ -175,12 +184,13 @@ export default Vue.extend({
             this.deleteStation();
             break;
           case "editStation":
-            this.addingStation=true;
-            this.operation="edit";
+            this.addingStation = true;
+            this.operation = "edit";
             break;
-          case "addBicycle":
+          case "addOrEditBicycle":
             this.addingBicycle = true;
             this.drawerDetail = false;
+            this.operation = "add";
             break;
         }
       }, 100);
@@ -212,16 +222,27 @@ export default Vue.extend({
           .catch(showError);
       });
     },
-    addBicycle() {
+    editBicycle(bicycle) {
+      console.log(bicycle);
+      
+      this.bicycle=bicycle;
+      this.operation = "edit";
+      this.addingBicycle = true;
+      this.drawerDetail = false;
+    },
+    addOrEditBicycle() {
+      console.log(this.bicycle);
       Vue.axios
         .post(
           getUrl("Admin", "Bicycle"),
           withToken({
             item: {
+              id:this.bicycle.id,
               bicycleID: this.bicycle.bicycleID,
+              canHire: this.bicycle.canHire,
               station: { id: this.station.id }
             },
-            type: "add"
+            type: this.operation
           })
         )
         .then(response => {
@@ -254,7 +275,6 @@ export default Vue.extend({
         .catch(showError);
     },
     searchSelect(e) {
-      console.log("选择到了", e);
       this.$refs.map.panTo([e.lng, e.lat]);
     },
     gotStations(e) {
@@ -335,9 +355,13 @@ export default Vue.extend({
   margin-top: 6px;
   margin-bottom: 6px;
 }
-.add-form .el-input {
+.add-form .el-input,.el-switch {
   display: block;
   margin-top: 6px;
   margin-bottom: 12px;
+}
+.cell .el-button{
+  margin-left:6px;
+  margin-right:6px;
 }
 </style>

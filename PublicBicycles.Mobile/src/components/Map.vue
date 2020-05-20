@@ -37,6 +37,7 @@ export default Vue.component("map-view", {
   computed: {},
   methods: {
     jump: jump,
+    // 新增一个瓦片图层
     addLayer(url) {
       this.map.addLayer(
         new ol.layer.Tile({
@@ -46,14 +47,14 @@ export default Vue.component("map-view", {
         })
       );
     },
-
+    // 获取指定要素的样式
     getStyle(feature, selected) {
       return new ol.style.Style({
         image: new ol.style.Icon({
           src: `../img/bicycle${selected ? "_selected" : ""}.png`,
           scale: 1.0 / 6
         }),
-
+        // 标签格式
         text: new ol.style.Text({
           offsetY: 24,
           fill: new ol.style.Fill({
@@ -67,11 +68,13 @@ export default Vue.component("map-view", {
         })
       });
     },
+    // 初始化地图
     initMap() {
       this.map = new ol.Map({
         target: "map",
         layers: [],
         controls: ol.control.defaults({
+          //删除不需要的控件
           attribution: false,
           zoom: false
         }),
@@ -86,12 +89,11 @@ export default Vue.component("map-view", {
       this.addLayer(
         "http://t0.tianditu.com/cva_w/wmts?service=WMTS&request=GetTile&version=1.0.0&layer=cva&style=default&TILEMATRIXSET=w&format=tiles&height=256&width=256&tilematrix={z}&tilerow={y}&tilecol={x}&tk=9396357d4b92e8e197eafa646c3c541d"
       );
-      //this.map.addLayer(this.stationLayer);
-
+      //如果需要接收点击事件，那么注册一个事件
       if (this.enableClick) {
         this.map.on("click", event => {
-          setTimeout(() => {
-            if (this.selecting) {
+          setTimeout(() => {//延迟100毫秒，让选择时间先响应
+            if (this.selecting) {//如果已经被选择了，那么就不需要响应单击事件了
               this.selecting = false;
               return;
             }
@@ -198,7 +200,7 @@ export default Vue.component("map-view", {
       Vue.axios
         .post(
           getUrl("Analysis", "Routes"),
-          withToken({ stationID: station.id, days: 5 })
+          withToken({ stationID: station.id, days: 100 })
         )
         .then(response => {
           const currentCoord = ol.proj.fromLonLat([station.lng, station.lat]);

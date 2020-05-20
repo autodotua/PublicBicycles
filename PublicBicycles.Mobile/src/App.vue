@@ -11,7 +11,7 @@
         <router-view></router-view>
       </el-main>
       <el-drawer title :visible.sync="menu" :with-header="false" direction="ltr" size="240px">
-        <el-menu router="true" @select="menuSelect">
+        <el-menu :router="true" @select="menuSelect">
           <el-menu-item index="home">
             <i class="el-icon-map-location"></i>
             <span slot="title">地图</span>

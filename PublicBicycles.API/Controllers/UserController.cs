@@ -82,6 +82,11 @@ namespace PublicBicycles.API.Controllers
             }
         }
 
+        /// <summary>
+        /// 获取用户所有借车记录
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("Records")]
         public async Task<ResponseData<List<Hire>>> HireRecordsAsync([FromBody] UserToken request)
@@ -96,6 +101,11 @@ namespace PublicBicycles.API.Controllers
                 .Include(p => p.ReturnStation)
                 .ToListAsync());
         }
+        /// <summary>
+        /// 借车
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("Hire")]
         public async Task<ResponseData<Hire>> HireAsync([FromBody] HireReturnRequest request)
@@ -113,6 +123,11 @@ namespace PublicBicycles.API.Controllers
                 _ => throw new NotImplementedException(),
             };
         }         
+        /// <summary>
+        /// 还车
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("Return")]
         public async Task<ResponseData<Hire>> ReturnAsync([FromBody] HireReturnRequest request)
@@ -132,6 +147,11 @@ namespace PublicBicycles.API.Controllers
                 _ => throw new NotImplementedException(),
             };
         }     
+        /// <summary>
+        /// 获取当前是否有借车
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("Status")]
         public async Task<ResponseData<Hire>> StatusAsync([FromBody] UserToken request)
