@@ -8,6 +8,11 @@ namespace PublicBicycles.API.Controllers
 {
     public class AdminController : PublicBicyclesControllerBase
     {
+        /// <summary>
+        /// 生成测试数据
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("Fake")]
         public ResponseData<object> GenerateTestDatasAsync([FromBody] TestDatasRequest request)
@@ -19,6 +24,11 @@ namespace PublicBicycles.API.Controllers
             DatabaseInitializer.GenerateTestDatas(db,request.Days);
             return new ResponseData<object>();
         }
+        /// <summary>
+        /// 对自行车的增删改
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("Bicycle")]
         public async Task<ResponseData<object>> BicycleAsync([FromBody] CURDRequest<Bicycle> request)
@@ -43,6 +53,11 @@ namespace PublicBicycles.API.Controllers
                     return new ResponseData<object>(null, false, "不支持的操作类型");
             }
         }
+        /// <summary>
+        /// 对租赁点的增删改
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns></returns>
         [HttpPost]
         [Route("Station")]
         public async Task<ResponseData<object>> StationAsync([FromBody] CURDRequest<Station> request)

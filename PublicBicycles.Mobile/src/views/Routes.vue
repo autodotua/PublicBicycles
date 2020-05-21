@@ -2,29 +2,15 @@
   <div class="container">
     <map-view ref="map" map-type="routes" @gotStations="gotStations"></map-view>
 
-    <el-autocomplete
-      class="search"
-      :style="searchStyle"
-      v-model="searchContent"
-      :fetch-suggestions="querySearch"
-      placeholder="请输入内容"
-      @select="searchSelect"
-    ></el-autocomplete>
+    <search-bar style="top:72px" class="search" :stations="stations" @select="searchSelected"></search-bar>
   </div>
 </template>
 <script>
 import Vue from "vue";
 import "../map/ClusterLayer";
 import Cookies from "js-cookie";
-import {
-  withToken,
-  getUrl,
-  showError,
-  jump,
-  formatDateTime,
-  showNotify,
-} from "../common";
 import Map from "../components/Map";
+import SearchBar from "../components/SearchBar";
 export default Vue.extend({
   name: "Routes",
   data() {
@@ -39,38 +25,17 @@ export default Vue.extend({
     };
   },
   components: {
-    "map-view": Map
+    "map-view": Map,
+    "search-bar": SearchBar
   },
-  computed: {
-    searchStyle() {
-      if (this.currentHire == null) {
-        return "top:72px;";
-      }
-      return "top:120px;";
-    }
-  },
+  computed: {},
   methods: {
-    searchSelect(e) {
+    searchSelected(e) {
       this.$refs.map.panTo([e.lng, e.lat]);
     },
     gotStations(e) {
       this.stations = e;
     },
-    formatDateTime: formatDateTime,
-    jump: jump,
-    querySearch(queryString, callback) {
-      if (this.searchContent) {
-        const result = this.stations.filter(
-          p => p.name.indexOf(this.searchContent) >= 0
-        );
-        const values = [];
-        for (const station of result) {
-          values.push(Object.assign({ value: station.name }, station));
-        }
-        callback(values);
-      }
-    },
-
   },
   mounted: function() {
     this.$nextTick(function() {

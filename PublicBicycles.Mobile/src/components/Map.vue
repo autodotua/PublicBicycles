@@ -1,3 +1,4 @@
+
 <template>
   <div class="container">
     <link
@@ -37,7 +38,9 @@ export default Vue.component("map-view", {
   computed: {},
   methods: {
     jump: jump,
-    // 新增一个瓦片图层
+    /**
+     * 新增一个瓦片图层
+     */
     addLayer(url) {
       this.map.addLayer(
         new ol.layer.Tile({
@@ -47,7 +50,9 @@ export default Vue.component("map-view", {
         })
       );
     },
-    // 获取指定要素的样式
+    /**
+     * 获取指定要素的样式
+     */
     getStyle(feature, selected) {
       return new ol.style.Style({
         image: new ol.style.Icon({
@@ -68,7 +73,53 @@ export default Vue.component("map-view", {
         })
       });
     },
-    // 初始化地图
+    /**
+     * 处理地图点击事件
+     */
+    handleClickEvent(event){
+        setTimeout(() => {//延迟100毫秒，让选择时间先响应
+            if (this.selecting) {//如果已经被选择了，那么就不需要响应单击事件了
+              this.selecting = false;
+              return;
+            }
+            const coord = ol.proj.transform(
+              event.coordinate,
+              "EPSG:3857",
+              "EPSG:4326"
+            );
+            const point = new ol.geom.Point(event.coordinate);
+            const feature = new Feature({
+              geometry: point
+            });
+            //生成一个标记点击点的标志
+            if (this.markerLayer) {
+              this.map.removeLayer(this.markerLayer);
+            } else {
+              this.markerLayer = new ol.layer.Vector({
+                name: "stations",
+                maxResolution: 6, //越小越晚出现
+                source: new ol.source.Vector({
+                  features: [feature]
+                }),
+                style: () => {
+                  return new ol.style.Style({
+                    image: new ol.style.Icon({
+                      src: `../img/marker.png`,
+                      scale: 1.0 / 3
+                    })
+                  });
+                }
+              });
+              this.map.addLayer(this.markerLayer);
+              this.panTo(coord);
+              //向上层发射信号
+              this.$emit("click", coord);
+            }
+          }, 100);
+    },
+    /**
+     * 初始化地图
+     */
     initMap() {
       this.map = new ol.Map({
         target: "map",
@@ -91,45 +142,7 @@ export default Vue.component("map-view", {
       );
       //如果需要接收点击事件，那么注册一个事件
       if (this.enableClick) {
-        this.map.on("click", event => {
-          setTimeout(() => {//延迟100毫秒，让选择时间先响应
-            if (this.selecting) {//如果已经被选择了，那么就不需要响应单击事件了
-              this.selecting = false;
-              return;
-            }
-            const coord = ol.proj.transform(
-              event.coordinate,
-              "EPSG:3857",
-              "EPSG:4326"
-            );
-            const point = new ol.geom.Point(event.coordinate);
-            const feature = new Feature({
-              geometry: point
-            });
-            if (this.markerLayer) {
-              this.map.removeLayer(this.markerLayer);
-            } else {
-              this.markerLayer = new ol.layer.Vector({
-                name: "stations",
-                maxResolution: 6, //越小越晚出现
-                source: new ol.source.Vector({
-                  features: [feature]
-                }),
-                style: () => {
-                  return new ol.style.Style({
-                    image: new ol.style.Icon({
-                      src: `../img/marker.png`,
-                      scale: 1.0 / 3
-                    })
-                  });
-                }
-              });
-              this.map.addLayer(this.markerLayer);
-              this.panTo(coord);
-              this.$emit("click", coord);
-            }
-          }, 100);
-        });
+        this.map.on("click", this.handleClickEvent);
       }
 
       const selection = new ol.interaction.Select({
@@ -147,7 +160,6 @@ export default Vue.component("map-view", {
             return;
           }
           this.selecting = true;
-          //this.stationName = (e as any).selected[0].getProperties().object.name;
           setTimeout(() => {
             if (this.mapType == "routes") {
               this.loadRoutes(station);
@@ -159,6 +171,9 @@ export default Vue.component("map-view", {
         }
       });
     },
+    /**
+     * 加载聚类图层
+     */
     loadCluster(stations) {
       const data = [];
       for (const station of stations) {
@@ -167,7 +182,7 @@ export default Vue.component("map-view", {
       const cluster = ol.layer.ClusterLayer({
         map: this.map,
         clusterField: "",
-        zooms: [15],
+        zooms: [15],//表示到15级以后就隐藏了
         distance: 100,
         data: data,
         style: null
@@ -175,6 +190,9 @@ export default Vue.component("map-view", {
       this.clusterLayer = cluster;
       this.map.addLayer(cluster);
     },
+    /**
+     * 加载租赁点图层
+     */
     loadStations(features) {
       const layer = new ol.layer.Vector({
         name: "stations",
@@ -187,6 +205,9 @@ export default Vue.component("map-view", {
       this.stationLayer = layer;
       this.map.addLayer(layer);
     },
+    /**
+     * 加载热力图图层
+     */
     loadHeatmap(features) {
       const heatmap = new ol.layer.Heatmap({
         source: new ol.source.Vector({
@@ -196,6 +217,9 @@ export default Vue.component("map-view", {
       });
       this.map.addLayer(heatmap);
     },
+    /**
+     * 加载某一个租赁点的路线
+     */
     loadRoutes(station) {
       Vue.axios
         .post(
@@ -206,28 +230,33 @@ export default Vue.component("map-view", {
           const currentCoord = ol.proj.fromLonLat([station.lng, station.lat]);
           const routes = response.data.data;
           const features = [];
+          /**
+           * 将路线集合加入到要素集合中
+           */
           const addToFeatures = (items, type) => {
             for (const stationID of Object.keys(items)) {
+              //目标租赁点
               const targetStation = this.stations.find(p => p.id == stationID);
+              //目标租赁点的坐标，WGS84
               const targetCoord = ol.proj.fromLonLat([
                 targetStation.lng,
                 targetStation.lat
               ]);
               const feature = new Feature({
                 geometry: new ol.geom.LineString([currentCoord, targetCoord]),
-                weight: items[stationID],
+                weight: items[stationID],//路线的宽度使用该路线的发生次数来表示
                 type
               });
               features.push(feature);
             }
           };
+          //分别对归还和借出调用函数
           addToFeatures(routes.in, "in");
           addToFeatures(routes.out, "out");
           if (this.routesLayer) {
             this.map.removeLayer(this.routesLayer);
           }
           this.routesLayer = new ol.layer.Vector({
-            //maxResolution: 6, //越小越晚出现
             source: new ol.source.Vector({
               features: features
             }),
@@ -235,7 +264,7 @@ export default Vue.component("map-view", {
               const t = feature.getProperties()["type"];
               return new ol.style.Style({
                 stroke: new ol.style.Stroke({
-                  color: t == "in" ? "#33FF55" : "#FF0000",
+                  color: t == "in" ? "#33FF55" : "#FF0000",//in用绿色，out用红色
                   width: feature.getProperties()["weight"] * 3
                 })
               });
@@ -245,6 +274,9 @@ export default Vue.component("map-view", {
         })
         .catch(showError);
     },
+    /**
+     * 平移到，并放大
+     */
     panTo(loc) {
       this.map.getView().animate({
         duration: 300,
@@ -253,6 +285,9 @@ export default Vue.component("map-view", {
         center: ol.proj.fromLonLat(loc)
       });
     },
+    /**
+     * 加载基础数据
+     */
     loadDatas() {
       if (this.clusterLayer) {
         this.map.removeLayer(this.clusterLayer);
@@ -265,6 +300,7 @@ export default Vue.component("map-view", {
         .then(response => {
           const features = [];
           this.stations = response.data.data;
+          //向上级发送获取到的租赁点信息
           this.$emit("gotStations", response.data.data);
           for (const station of response.data.data) {
             const point = new ol.geom.Point(
@@ -279,12 +315,14 @@ export default Vue.component("map-view", {
           switch (this.mapType) {
             case "normal":
             case "routes":
+              //对于普通或路线类型，加载聚类图层和租赁点图层
               this.loadCluster(response.data.data);
               this.loadStations(features);
               break;
             case "heatmap":
-              this.loadCluster(response.data.data);
+              //this.loadCluster(response.data.data);
               this.loadStations(features);
+              //对于热力图，还需要记载热力图图层
               this.loadHeatmap(features);
               break;
           }
@@ -298,6 +336,7 @@ export default Vue.component("map-view", {
       if (Cookies.get("userID") == undefined) {
         return;
       }
+      //页面加载后，需要初始化地图并加载数据
       this.initMap();
       this.loadDatas();
     });

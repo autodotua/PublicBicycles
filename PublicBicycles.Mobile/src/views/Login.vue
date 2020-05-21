@@ -41,6 +41,9 @@ export default Vue.extend({
     return { username: "admin", password: "admin", buttonsDisabled: false };
   },
   methods: {
+    /**
+     * 登陆后，设置cookies
+     */
     afterLogin(response: AxiosResponse<any>, register = false) {
       if (response.data.succeed) {
         Cookies.set("userID", response.data.data.userID);
@@ -55,6 +58,9 @@ export default Vue.extend({
         );
       }
     },
+    /**
+     * 登录
+     */
     login() {
       Vue.axios
         .post(getUrl("User","Login"), {
@@ -66,6 +72,9 @@ export default Vue.extend({
         })
         .catch(showError);
     },
+    /**
+     * 注册
+     */
     register() {
       Vue.axios
         .post(getUrl("User","Register"), {

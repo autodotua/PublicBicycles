@@ -9,14 +9,7 @@
       @click="mapClick"
     ></map-view>
 
-    <el-autocomplete
-      class="search"
-      :style="searchStyle"
-      v-model="searchContent"
-      :fetch-suggestions="querySearch"
-      placeholder="请输入内容"
-      @select="searchSelect"
-    ></el-autocomplete>
+  <search-bar style="top:72px" class="search" :stations="stations" @select="searchSelected"></search-bar>
     <el-drawer
       title
       :visible.sync="drawerDetail"
@@ -107,6 +100,7 @@ import {
   formatDateTime,
   showNotify
 } from "../common";
+import SearchBar from "../components/SearchBar";
 import Map from "../components/Map";
 export default Vue.extend({
   name: "Home",
@@ -131,31 +125,34 @@ export default Vue.extend({
     };
   },
   components: {
-    "map-view": Map
+    "map-view": Map,
+    "search-bar": SearchBar
   },
   computed: {
     showSidePanel() {
       return this.addingBicycle || this.addingStation;
     },
-    searchStyle() {
-      if (this.currentHire == null) {
-        return "top:72px;";
-      }
-      return "top:120px;";
-    }
+ 
   },
   methods: {
+    /**
+     * 地图单击
+     */
     mapClick(coord) {
-      (this.addingStation = true),
-        (this.station = {
-          name: "",
-          address: "",
-          count: 25,
-          lng: coord[0],
-          lat: coord[1]
-        });
+      //开始新增租赁点
+      this.addingStation = true;
+      this.station = {
+        name: "",
+        address: "",
+        count: 25,
+        lng: coord[0],
+        lat: coord[1]
+      };
       this.operation = "add";
     },
+    /**
+     * 增加或编辑租赁点，单击“确定”按钮触发
+     */
     addOrEditStation() {
       Vue.axios
         .post(
@@ -177,6 +174,9 @@ export default Vue.extend({
         })
         .catch(showError);
     },
+    /**
+     * 处理自行车列表抽屉右上角的下拉框的单击事件
+     */
     handleDropdownCommand(cmd) {
       setTimeout(() => {
         switch (cmd) {
@@ -195,6 +195,9 @@ export default Vue.extend({
         }
       }, 100);
     },
+    /**
+     * 删除站点
+     */
     deleteStation() {
       this.$confirm("是否删除该站点?", "提示", {
         confirmButtonText: "确定",
@@ -222,22 +225,25 @@ export default Vue.extend({
           .catch(showError);
       });
     },
+    /**
+     * 开始编辑自行车，单击表格上的按钮触发
+     */
     editBicycle(bicycle) {
-      console.log(bicycle);
-      
-      this.bicycle=bicycle;
+      this.bicycle = bicycle;
       this.operation = "edit";
       this.addingBicycle = true;
       this.drawerDetail = false;
     },
+    /**
+     * 增加或编辑自行车，单击“确定”按钮触发
+     */
     addOrEditBicycle() {
-      console.log(this.bicycle);
       Vue.axios
         .post(
           getUrl("Admin", "Bicycle"),
           withToken({
             item: {
-              id:this.bicycle.id,
+              id: this.bicycle.id,
               bicycleID: this.bicycle.bicycleID,
               canHire: this.bicycle.canHire,
               station: { id: this.station.id }
@@ -255,6 +261,9 @@ export default Vue.extend({
         })
         .catch(showError);
     },
+    /**
+     * 删除自行车
+     */
     deleteBicycle(bicycle) {
       Vue.axios
         .post(
@@ -274,7 +283,7 @@ export default Vue.extend({
         })
         .catch(showError);
     },
-    searchSelect(e) {
+    searchSelected(e) {
       this.$refs.map.panTo([e.lng, e.lat]);
     },
     gotStations(e) {
@@ -282,21 +291,14 @@ export default Vue.extend({
     },
     formatDateTime: formatDateTime,
     jump: jump,
-    querySearch(queryString, callback) {
-      if (this.searchContent) {
-        const result = this.stations.filter(
-          p => p.name.indexOf(this.searchContent) >= 0
-        );
-        const values = [];
-        for (const station of result) {
-          values.push(Object.assign({ value: station.name }, station));
-        }
-        callback(values);
-      }
-    },
+
+    /**
+     * 租赁点被选中的事件
+     */
     stationSelected(station) {
       this.drawerDetail = true;
       this.station = station;
+      //获取该站点下的自行车
       Vue.axios
         .get(getUrl("Map", "Bicycles") + `/${station.id}`)
         .then(response => {
@@ -355,13 +357,14 @@ export default Vue.extend({
   margin-top: 6px;
   margin-bottom: 6px;
 }
-.add-form .el-input,.el-switch {
+.add-form .el-input,
+.el-switch {
   display: block;
   margin-top: 6px;
   margin-bottom: 12px;
 }
-.cell .el-button{
-  margin-left:6px;
-  margin-right:6px;
+.cell .el-button {
+  margin-left: 6px;
+  margin-right: 6px;
 }
 </style>

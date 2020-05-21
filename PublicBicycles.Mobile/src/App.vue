@@ -70,16 +70,7 @@ export default Vue.extend({
     isAdmin:isAdmin,
     jump: jump,
     menuSelect(index: number) {
-      console.log(index);
       this.menu = false;
-      // switch (index) {
-      //   case 1:
-      //     jump("map");
-      //     break;
-      //   case 2:
-      //     jump("records");
-      //     break;
-      // }
     },
     clickUsername() {
       this.$confirm("是否退出账户？", "提示", {

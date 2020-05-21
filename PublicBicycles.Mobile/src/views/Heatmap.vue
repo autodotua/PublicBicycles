@@ -1,41 +1,23 @@
 <template>
   <div class="container">
-    <map-view ref="map" map-type="heatmap" ></map-view>
-
+    <map-view ref="map" map-type="heatmap"></map-view>
   </div>
 </template>
 <script>
 import Vue from "vue";
 import "../map/ClusterLayer";
 import Cookies from "js-cookie";
-import {
-  withToken,
-  getUrl,
-  showError,
-  jump,
-  formatDateTime,
-  showNotify,
-} from "../common";
 import Map from "../components/Map";
 export default Vue.extend({
   name: "Routes",
   data() {
-    return {
-    
-    };
+    return {};
   },
   components: {
     "map-view": Map
   },
-  computed: {
-
-  },
-  methods: {
-
-    formatDateTime: formatDateTime,
-    jump: jump,
-
-  },
+  computed: {},
+  methods: {},
   mounted: function() {
     this.$nextTick(function() {
       if (Cookies.get("userID") == undefined) {

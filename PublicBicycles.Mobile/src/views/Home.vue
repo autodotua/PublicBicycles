@@ -2,16 +2,20 @@
   <div class="container">
     <map-view ref="map" @select="stationSelected" map-type="normal" @gotStations="gotStations"></map-view>
     <div id="hire-bar" class="bar" v-show="currentHire">
+      <!-- 顶部借车条 -->
       <a>从{{currentHire?formatDateTime(currentHire.hireTime):""}}起借车</a>
     </div>
-    <el-autocomplete
+    <!-- 搜索框 -->
+    <!-- <el-autocomplete
       class="search"
       :style="searchStyle"
       v-model="searchContent"
       :fetch-suggestions="querySearch"
       placeholder="请输入内容"
       @select="searchSelect"
-    ></el-autocomplete>
+    ></el-autocomplete>-->
+    <search-bar :style="searchStyle" class="search" :stations="stations" @select="searchSelected"></search-bar>
+    <!-- 自行车抽屉 -->
     <el-drawer
       title
       :visible.sync="drawerDetail"
@@ -24,7 +28,6 @@
         <b>{{station?station.name:""}}</b>
         {{station?station.bicycleCount:""}}/{{station?station.count:""}}
       </a>
-
       <el-button
         class="return-btn"
         plain
@@ -52,11 +55,11 @@ import {
   withToken,
   getUrl,
   showError,
-  jump,
   formatDateTime,
-  showNotify,
+  showNotify
 } from "../common";
 import Map from "../components/Map";
+import SearchBar from "../components/SearchBar";
 export default Vue.extend({
   name: "Home",
   data() {
@@ -66,12 +69,12 @@ export default Vue.extend({
       drawerDetail: false,
       stations: [],
       station: undefined,
-      currentHire: undefined,
-      searchContent: ""
+      currentHire: undefined
     };
   },
   components: {
-    "map-view": Map
+    "map-view": Map,
+    "search-bar": SearchBar
   },
   computed: {
     searchStyle() {
@@ -82,32 +85,18 @@ export default Vue.extend({
     }
   },
   methods: {
-    searchSelect(e) {
-      console.log("选择到了", e);
+    searchSelected(e) {
       this.$refs.map.panTo([e.lng, e.lat]);
     },
     gotStations(e) {
       this.stations = e;
     },
     formatDateTime: formatDateTime,
-    jump: jump,
-    querySearch(queryString, callback) {
-      if (this.searchContent) {
-        const result = this.stations.filter(
-          p => p.name.indexOf(this.searchContent) >= 0
-        );
-        const values = [];
-        for (const station of result) {
-          values.push(Object.assign({ value: station.name }, station));
-        }
-        callback(values);
-      }
-    },
-    getImageUrl(id) {
-      return getUrl("Home", "PublicBicyclesImage") + "/" + id;
-    },
+
+    /**
+     * 归还自行车
+     */
     returnBicycle() {
-      console.log(this.currentHire);
       Vue.axios
         .post(
           getUrl("User", "Return"),
@@ -126,6 +115,9 @@ export default Vue.extend({
         })
         .catch(showError);
     },
+    /**
+     * 借车
+     */
     hireBicycle(item) {
       Vue.axios
         .post(
@@ -145,7 +137,9 @@ export default Vue.extend({
         })
         .catch(showError);
     },
-
+    /**
+     * 站点被选择，弹出自行车表格
+     */
     stationSelected(station) {
       this.drawerDetail = true;
       this.station = station;
@@ -162,6 +156,9 @@ export default Vue.extend({
       if (Cookies.get("userID") == undefined) {
         return;
       }
+      /**
+       * 获取当前借车信息
+       */
       Vue.axios
         .post(getUrl("User", "Status"), withToken({}))
         .then(response => {

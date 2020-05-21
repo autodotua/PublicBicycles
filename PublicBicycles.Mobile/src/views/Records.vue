@@ -1,7 +1,6 @@
 <template>
   <div>
     <h2 class="header-title" style="margin-left:12px">借车记录</h2>
-    <!-- <el-button style="float:right" type="primary" @click="drawerAdd=true">新增</el-button> -->
     <el-table :data="records" style="width: 100%">
       <el-table-column prop="hireTime" label="借车时间" width="160"></el-table-column>
       <el-table-column prop="returnTime" label="还车时间" width="160"></el-table-column>
@@ -26,10 +25,10 @@ export default Vue.extend({
   components: {},
   mounted: function() {
     this.$nextTick(function() {
+      //获取所有的借车记录
       Vue.axios
         .post(getUrl("User", "Records"), withToken({}))
         .then(response => {
-          console.log(response)
           for (const record of response.data.data) {
             record.hireTime = formatDateTime(record.hireTime as string);
             record.returnTime = formatDateTime(record.returnTime as string);
