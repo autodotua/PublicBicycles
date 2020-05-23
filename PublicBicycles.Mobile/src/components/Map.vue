@@ -7,6 +7,22 @@
       type="text/css"
     />
     <div id="map"></div>
+    <!-- 搜索框 -->
+    <!-- <el-autocomplete
+      class="search"
+      :style="searchStyle"
+      v-model="searchContent"
+      :fetch-suggestions="querySearch"
+      placeholder="请输入内容"
+      @select="searchSelect"
+    ></el-autocomplete>-->
+    <search-bar
+      :style="searchBarStyle"
+      class="search"
+      :stations="stations"
+      @select="searchSelected"
+      v:show="enableSearch"
+    ></search-bar>
   </div>
 </template>
 <script >
@@ -14,6 +30,7 @@ import Vue from "vue";
 import "../map/ClusterLayer";
 import Cookies from "js-cookie";
 import ol, { Map, View, proj, Feature } from "openlayers";
+import SearchBar from "../components/SearchBar";
 import { withToken, getUrl, showError, jump, formatDateTime } from "../common";
 export default Vue.component("map-view", {
   data() {
@@ -27,16 +44,28 @@ export default Vue.component("map-view", {
       routesLayer: undefined
     };
   },
+  component: {
+    "search-bar": SearchBar
+  },
   props: {
     mapType: {
       default: "normal"
     },
     enableClick: {
       default: false
+    },
+    enableSearch: {
+      default: true
+    },
+    searchBarStyle: {
+      default: "top:72px"
     }
   },
   computed: {},
   methods: {
+    searchSelected(e) {
+      this.panTo([e.lng, e.lat]);
+    },
     jump: jump,
     /**
      * 新增一个瓦片图层
@@ -57,11 +86,11 @@ export default Vue.component("map-view", {
       return new ol.style.Style({
         image: new ol.style.Icon({
           src: `../img/bicycle${selected ? "_selected" : ""}.png`,
-          scale: 1.0 / 6
+          scale: 1.0 / 5
         }),
         // 标签格式
         text: new ol.style.Text({
-          offsetY: 24,
+          offsetY: 32,
           fill: new ol.style.Fill({
             color: "#000"
           }),
@@ -69,6 +98,7 @@ export default Vue.component("map-view", {
             color: "#fff",
             width: 3
           }),
+          scale:1.5,
           text: feature.getProperties().object.name
         })
       });
@@ -76,46 +106,48 @@ export default Vue.component("map-view", {
     /**
      * 处理地图点击事件
      */
-    handleClickEvent(event){
-        setTimeout(() => {//延迟100毫秒，让选择时间先响应
-            if (this.selecting) {//如果已经被选择了，那么就不需要响应单击事件了
-              this.selecting = false;
-              return;
-            }
-            const coord = ol.proj.transform(
-              event.coordinate,
-              "EPSG:3857",
-              "EPSG:4326"
-            );
-            const point = new ol.geom.Point(event.coordinate);
-            const feature = new Feature({
-              geometry: point
-            });
-            //生成一个标记点击点的标志
-            if (this.markerLayer) {
-              this.map.removeLayer(this.markerLayer);
-            } else {
-              this.markerLayer = new ol.layer.Vector({
-                name: "stations",
-                maxResolution: 6, //越小越晚出现
-                source: new ol.source.Vector({
-                  features: [feature]
-                }),
-                style: () => {
-                  return new ol.style.Style({
-                    image: new ol.style.Icon({
-                      src: `../img/marker.png`,
-                      scale: 1.0 / 3
-                    })
-                  });
-                }
+    handleClickEvent(event) {
+      setTimeout(() => {
+        //延迟100毫秒，让选择时间先响应
+        if (this.selecting) {
+          //如果已经被选择了，那么就不需要响应单击事件了
+          this.selecting = false;
+          return;
+        }
+        const coord = ol.proj.transform(
+          event.coordinate,
+          "EPSG:3857",
+          "EPSG:4326"
+        );
+        const point = new ol.geom.Point(event.coordinate);
+        const feature = new Feature({
+          geometry: point
+        });
+        //生成一个标记点击点的标志
+        if (this.markerLayer) {
+          this.map.removeLayer(this.markerLayer);
+        } else {
+          this.markerLayer = new ol.layer.Vector({
+            name: "stations",
+            maxResolution: 6, //越小越晚出现
+            source: new ol.source.Vector({
+              features: [feature]
+            }),
+            style: () => {
+              return new ol.style.Style({
+                image: new ol.style.Icon({
+                  src: `../img/marker.png`,
+                  scale: 1.0 / 3
+                })
               });
-              this.map.addLayer(this.markerLayer);
-              this.panTo(coord);
-              //向上层发射信号
-              this.$emit("click", coord);
             }
-          }, 100);
+          });
+          this.map.addLayer(this.markerLayer);
+          this.panTo(coord);
+          //向上层发射信号
+          this.$emit("click", coord);
+        }
+      }, 100);
     },
     /**
      * 初始化地图
@@ -182,7 +214,7 @@ export default Vue.component("map-view", {
       const cluster = ol.layer.ClusterLayer({
         map: this.map,
         clusterField: "",
-        zooms: [15],//表示到15级以后就隐藏了
+        zooms: [15], //表示到15级以后就隐藏了
         distance: 100,
         data: data,
         style: null
@@ -244,7 +276,7 @@ export default Vue.component("map-view", {
               ]);
               const feature = new Feature({
                 geometry: new ol.geom.LineString([currentCoord, targetCoord]),
-                weight: items[stationID],//路线的宽度使用该路线的发生次数来表示
+                weight: items[stationID], //路线的宽度使用该路线的发生次数来表示
                 type
               });
               features.push(feature);
@@ -264,7 +296,7 @@ export default Vue.component("map-view", {
               const t = feature.getProperties()["type"];
               return new ol.style.Style({
                 stroke: new ol.style.Stroke({
-                  color: t == "in" ? "#33FF55" : "#FF0000",//in用绿色，out用红色
+                  color: t == "in" ? "#33FF55" : "#FF0000", //in用绿色，out用红色
                   width: feature.getProperties()["weight"] * 3
                 })
               });
@@ -360,4 +392,12 @@ export default Vue.component("map-view", {
   margin-top: -12px;
   margin-left: 12px;
 }
+
+.search {
+  position: absolute;
+  /* top: 120px; */
+  left: 24px;
+  right: 24px;
+}
+
 </style>
