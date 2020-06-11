@@ -1,21 +1,15 @@
 <template>
   <div class="container">
-    <map-view ref="map" @select="stationSelected" map-type="normal" @gotStations="gotStations"></map-view>
+    <map-view ref="map" :enableSearch="true"
+     @select="stationSelected" map-type="normal" 
+     @gotStations="gotStations"
+     :searchBarStyle="searchStyle"
+     ></map-view>
     <div id="hire-bar" class="bar" v-show="currentHire">
       <!-- 顶部借车条 -->
       <a>从{{currentHire?formatDateTime(currentHire.hireTime):""}}起借车</a>
     </div>
-    <!-- 搜索框 -->
-    <!-- <el-autocomplete
-      class="search"
-      :style="searchStyle"
-      v-model="searchContent"
-      :fetch-suggestions="querySearch"
-      placeholder="请输入内容"
-      @select="searchSelect"
-    ></el-autocomplete>-->
-    <search-bar :style="searchStyle" class="search" :stations="stations" @select="searchSelected"></search-bar>
-    <!-- 自行车抽屉 -->
+     <!-- 自行车抽屉 -->
     <el-drawer
       title
       :visible.sync="drawerDetail"
@@ -59,7 +53,6 @@ import {
   showNotify
 } from "../common";
 import Map from "../components/Map";
-import SearchBar from "../components/SearchBar";
 export default Vue.extend({
   name: "Home",
   data() {
@@ -73,8 +66,7 @@ export default Vue.extend({
     };
   },
   components: {
-    "map-view": Map,
-    "search-bar": SearchBar
+    "map-view": Map
   },
   computed: {
     searchStyle() {
@@ -85,9 +77,7 @@ export default Vue.extend({
     }
   },
   methods: {
-    searchSelected(e) {
-      this.$refs.map.panTo([e.lng, e.lat]);
-    },
+  
     gotStations(e) {
       this.stations = e;
     },
@@ -186,6 +176,17 @@ export default Vue.extend({
   margin-left: 12px;
 }
 
+.return-btn {
+  float: right;
+  margin-top: 16px;
+  margin-right: 8px;
+}
+.station-title {
+  margin-top: 8px;
+  margin-left: 12px;
+  font-size: 1.25em;
+}
+
 .bar {
   width: 100%;
   height: 48px;
@@ -198,22 +199,5 @@ export default Vue.extend({
 .bar a {
   margin-left: 12px;
   color: #ffffff;
-}
-
-.return-btn {
-  float: right;
-  margin-top: 16px;
-  margin-right: 8px;
-}
-.station-title {
-  margin-top: 8px;
-  margin-left: 12px;
-  font-size: 1.25em;
-}
-.search {
-  position: absolute;
-  /* top: 120px; */
-  left: 24px;
-  right: 24px;
 }
 </style>

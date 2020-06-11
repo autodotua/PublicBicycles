@@ -1,8 +1,6 @@
 <template>
   <div class="container">
-    <map-view ref="map" map-type="routes" @gotStations="gotStations"></map-view>
-
-    <search-bar style="top:72px" class="search" :stations="stations" @select="searchSelected"></search-bar>
+    <map-view ref="map" map-type="routes" :enableSearch="true" @gotStations="gotStations"></map-view>
   </div>
 </template>
 <script>
@@ -10,7 +8,6 @@ import Vue from "vue";
 import "../map/ClusterLayer";
 import Cookies from "js-cookie";
 import Map from "../components/Map";
-import SearchBar from "../components/SearchBar";
 export default Vue.extend({
   name: "Routes",
   data() {
@@ -26,7 +23,6 @@ export default Vue.extend({
   },
   components: {
     "map-view": Map,
-    "search-bar": SearchBar
   },
   computed: {},
   methods: {
@@ -65,11 +61,5 @@ export default Vue.extend({
   margin-top: 8px;
   margin-left: 12px;
   font-size: 1.25em;
-}
-.search {
-  position: absolute;
-  /* top: 120px; */
-  left: 24px;
-  right: 24px;
 }
 </style>

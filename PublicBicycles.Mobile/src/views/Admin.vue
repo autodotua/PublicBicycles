@@ -7,9 +7,9 @@
       :enableClick="true"
       @gotStations="gotStations"
       @click="mapClick"
+      :enableSearch="true"
     ></map-view>
 
-  <search-bar style="top:72px" class="search" :stations="stations" @select="searchSelected"></search-bar>
     <el-drawer
       title
       :visible.sync="drawerDetail"
@@ -100,7 +100,6 @@ import {
   formatDateTime,
   showNotify
 } from "../common";
-import SearchBar from "../components/SearchBar";
 import Map from "../components/Map";
 export default Vue.extend({
   name: "Home",
@@ -125,14 +124,12 @@ export default Vue.extend({
     };
   },
   components: {
-    "map-view": Map,
-    "search-bar": SearchBar
+    "map-view": Map
   },
   computed: {
     showSidePanel() {
       return this.addingBicycle || this.addingStation;
-    },
- 
+    }
   },
   methods: {
     /**
