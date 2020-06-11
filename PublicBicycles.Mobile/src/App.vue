@@ -1,8 +1,8 @@
 <template>
   <div id="app">
     <el-container>
-      <el-header class="header" v:show="showHeader">
-        <el-button type="text" icon="el-icon-menu" style="float:left" @click="menu=true"></el-button>
+      <el-header class="header" >
+        <el-button type="text" icon="el-icon-menu" style="float:left" v-show="showHeader" @click="menu=true"></el-button>
         <el-button type="text" style="float:right" @click="clickUsername">{{username}}</el-button>
         <h3 style="float:left;margin-left:12px" @click="jump('')">公共自行车</h3>
         <slot name="header"></slot>
@@ -32,6 +32,10 @@
             <i class="el-icon-data-analysis"></i>
             <span slot="title">路线分析</span>
           </el-menu-item>
+          <el-menu-item index="password" >
+            <i class="el-icon-edit"></i>
+            <span slot="title">修改密码</span>
+          </el-menu-item>
         </el-menu>
       </el-drawer>
     </el-container>
@@ -59,6 +63,8 @@ export default Vue.extend({
       const url = window.location.href;
       if (url.indexOf("login") >= 0) {
         this.showHeader = false;
+        console.log("logining");
+        
       } else {
         if (Cookies.get("userID") == undefined) {
           jump("login");

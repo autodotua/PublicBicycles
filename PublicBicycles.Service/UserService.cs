@@ -26,7 +26,7 @@ namespace PublicBicycles.Service
             User user = new User()
             {
                 Username = username,
-                Password = CreateMD5(password),
+                Password = CreateMD5(username+password),
             };
             db.Add(user);
             await db.SaveChangesAsync();
@@ -48,7 +48,7 @@ namespace PublicBicycles.Service
             }
             //寻找用户名与密码都匹配的用户
             User user = await db.Users
-                .FirstOrDefaultAsync(p => p.Username == username && p.Password == CreateMD5(password));
+                .FirstOrDefaultAsync(p => p.Username == username && p.Password == CreateMD5(username+password));
 
             if (user == null)
             {

@@ -8,6 +8,7 @@ import Database from '../views/Database.vue'
 import Routes from '../views/Routes.vue'
 import Admin from '../views/Admin.vue'
 import Heatmap from '../views/Heatmap.vue'
+import Password from '../views/Password.vue'
 
 Vue.use(VueRouter)
 
@@ -31,6 +32,11 @@ Vue.use(VueRouter)
     path: '/heatmap',
     name: 'Heatmap',
     component: Heatmap
+  },
+  {
+    path: '/password',
+    name: 'Password',
+    component: Password
   },
   {
     path: '/routes',

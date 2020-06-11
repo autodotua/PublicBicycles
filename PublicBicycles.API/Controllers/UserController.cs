@@ -165,6 +165,38 @@ namespace PublicBicycles.API.Controllers
            
         }
 
+        [HttpPost]
+        [Route("Password")]
+        public async Task<ResponseData<object>> ChangePasswordAsync([FromBody] ChangePasswordRequest request)
+        {
+            if (!request.IsValid())
+            {
+                return new ResponseData<object>() { Succeed = false, Message = "用户验证失败" };
+            }
+            User carOwner = await db.Users.FindAsync(request.UserID);
+            if (carOwner == null)
+            {
+                return new ResponseData<object>(null, false, "找不到用户");
+            }
+            if (carOwner.Password != UserService.CreateMD5(carOwner.Username + request.OldPassword))
+            {
+                return new ResponseData<object>(null, false, "旧密码错误");
+            }
+            await UserService.SetPasswordAsync(db, carOwner, request.NewPassword);
+            return new ResponseData<object>();
+        }
+        public class ChangePasswordRequest : UserToken
+        {
+            /// <summary>
+            /// 旧密码
+            /// </summary>
+            public string OldPassword { get; set; }
+            /// <summary>
+            /// 新密码
+            /// </summary>
+            public string NewPassword { get; set; }
+        }
+
         /// <summary>
         /// 登录请求
         /// </summary>

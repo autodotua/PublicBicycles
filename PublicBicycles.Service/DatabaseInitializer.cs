@@ -36,7 +36,7 @@ namespace PublicBicycles.Service
             db.Add(new User()
             {
                 Username = "admin",
-                Password = UserService.CreateMD5("admin"),
+                Password = UserService.CreateMD5("adminadmin"),
                 IsAdmin = true,
             });
             for (int i = 0; i < 1000; i++)
@@ -44,7 +44,7 @@ namespace PublicBicycles.Service
                 users.Add(new User()
                 {
                     Username = "user" + (i + 1),
-                    Password = UserService.CreateMD5("1234"),
+                    Password = UserService.CreateMD5(("user" + (i + 1))+"1234"),
                 });
             }
             db.AddRange(users);
@@ -151,7 +151,7 @@ namespace PublicBicycles.Service
                 {
                     IsAdmin = true,
                     Username = "admin",
-                    Password = UserService.CreateMD5("admin")
+                    Password = UserService.CreateMD5("adminadmin")
                 });
                 context.SaveChanges();
             }

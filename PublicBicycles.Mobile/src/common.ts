@@ -67,7 +67,9 @@ export function showError(r: any) {
 export function showNotify(msg: any) {
     Notification.info({ title: "提示", message: msg });
 }
-
+export function showSuccess(msg: any) {
+    Notification.success({ title: "成功", message: msg });
+}
 /**
  * 跳转到某个地址
  * @param url 
