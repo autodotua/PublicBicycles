@@ -1,5 +1,6 @@
 <template>
   <div class="login">
+    <div v-title data-title="登录注册 - 公共自行车"></div>
     <h1>登录</h1>
     <div class="box">
       <el-input id="name" v-model="username" placeholder="请输入帐号">

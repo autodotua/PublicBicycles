@@ -1,5 +1,6 @@
 <template>
   <div>
+    <div v-title data-title="借车记录 - 公共自行车"></div>
     <h2 class="header-title" style="margin-left:12px">借车记录</h2>
     <el-table :data="records" style="width: 100%">
       <el-table-column prop="hireTime" label="借车时间" width="160"></el-table-column>

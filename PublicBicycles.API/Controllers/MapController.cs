@@ -22,13 +22,13 @@ namespace PublicBicycles.API.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("Stations")]
-        public async Task<ResponseData<List<Station>>> StationsAsync()
+        public async Task<ResponseData> StationsAsync()
         {
             var stations = await db.Stations
                 .Where(p => p.Online)
                 .Where(p=>!p.Deleted)
                 .ToListAsync();
-            return new ResponseData<List<Station>>(stations);
+            return new ResponseData(stations);
         }
         /// <summary>
         /// 获取某一个租赁点所拥有的所有自行车信息
@@ -37,7 +37,7 @@ namespace PublicBicycles.API.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("Bicycles/{id}")]
-        public async Task<ResponseData<List<Bicycle>>> BicyclesAsync(int id)
+        public async Task<ResponseData> BicyclesAsync(int id)
         {
             var bicycles =await db.Bicycles
                 .Where(p => p.Station.ID == id)
@@ -45,7 +45,7 @@ namespace PublicBicycles.API.Controllers
                 .Where(p=>!p.Deleted)
                 .ToListAsync();
 
-            return new ResponseData<List<Bicycle>>(bicycles);
+            return new ResponseData(bicycles);
         }
 
 

@@ -1,8 +1,14 @@
 <template>
   <div id="app">
     <el-container>
-      <el-header class="header" >
-        <el-button type="text" icon="el-icon-menu" style="float:left" v-show="showHeader" @click="menu=true"></el-button>
+      <el-header class="header">
+        <el-button
+          type="text"
+          icon="el-icon-menu"
+          style="float:left"
+          v-show="showHeader"
+          @click="menu=true"
+        ></el-button>
         <el-button type="text" style="float:right" @click="clickUsername">{{username}}</el-button>
         <h3 style="float:left;margin-left:12px" @click="jump('')">公共自行车</h3>
         <slot name="header"></slot>
@@ -15,9 +21,9 @@
           <el-menu-item index="home">
             <i class="el-icon-map-location"></i>
             <span slot="title">地图</span>
-          </el-menu-item>    
-           <el-menu-item index="admin" v-show="isAdmin">
-            <i class="el-icon-s-tools" ></i>
+          </el-menu-item>
+          <el-menu-item index="admin" v-show="isAdmin">
+            <i class="el-icon-s-tools"></i>
             <span slot="title">管理</span>
           </el-menu-item>
           <el-menu-item index="records">
@@ -40,7 +46,7 @@
             <i class="el-icon-data-analysis"></i>
             <span slot="title">车辆平衡</span>
           </el-menu-item>
-          <el-menu-item index="password" >
+          <el-menu-item index="password">
             <i class="el-icon-edit"></i>
             <span slot="title">修改密码</span>
           </el-menu-item>
@@ -72,7 +78,6 @@ export default Vue.extend({
       if (url.indexOf("login") >= 0) {
         this.showHeader = false;
         console.log("logining");
-        
       } else {
         if (Cookies.get("userID") == undefined) {
           jump("login");
@@ -81,7 +86,7 @@ export default Vue.extend({
     });
   },
   methods: {
-    isAdmin:isAdmin,
+    isAdmin: isAdmin,
     jump: jump,
     menuSelect(index: number) {
       this.menu = false;
@@ -122,8 +127,8 @@ body,
   padding: 0px !important;
   margin: 0px;
 }
-td{
-  padding: 4px 0!important;
+td {
+  padding: 4px 0 !important;
 }
 </style>
 <style scoped>

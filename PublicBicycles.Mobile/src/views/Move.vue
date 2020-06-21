@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <div v-title data-title="车辆平衡 - 公共自行车"></div>
     <map-view
       ref="map"
       map-type="no-cluster"

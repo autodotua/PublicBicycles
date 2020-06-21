@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <div v-title data-title="修改密码 - 公共自行车"></div>
     <h2 class="header-title">修改密码</h2>
     <br />
     <br />

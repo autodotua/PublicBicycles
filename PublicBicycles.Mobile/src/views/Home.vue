@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <div v-title data-title="主页 - 公共自行车"></div>
     <map-view ref="map" :enableSearch="true"
      @select="stationSelected" map-type="normal" 
      @gotStations="gotStations"

@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <div v-title data-title="热力图 - 公共自行车"></div>
     <map-view ref="map" map-type="heatmap"></map-view>
   </div>
 </template>

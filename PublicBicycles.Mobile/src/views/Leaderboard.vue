@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <div v-title data-title="排行榜 - 公共自行车"></div>
     <h3 style="margin-left:1rem">近{{days}}日统计信息</h3>
     <div class="chart" id="hireStations"></div>
     <div class="chart" id="returnStations"></div>

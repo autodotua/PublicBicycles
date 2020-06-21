@@ -42,7 +42,7 @@ namespace PublicBicycles.Service
         /// <param name="stationID"></param>
         /// <param name="days"></param>
         /// <returns></returns>
-        public static async Task<Route> GetStationRoutesAsync(PublicBicyclesContext db, int stationID, int days)
+        public static async Task<object> GetStationRoutesAsync(PublicBicyclesContext db, int stationID, int days)
         {
             //起始时间
             DateTime earliest = DateTime.Now.AddDays(-days);
@@ -61,7 +61,7 @@ namespace PublicBicycles.Service
             //<int,int>的前一个int是StationID，后一个int是来自/前往该租赁点的自行车数量
             Dictionary<int, int> outCount = outs.GroupBy(p => p.ReturnStation.ID).ToDictionary(p => p.Key, p => p.Count());
             Dictionary<int, int> intCount = ins.GroupBy(p => p.HireStation.ID).ToDictionary(p => p.Key, p => p.Count());
-            return new Route()
+            return new 
             {
                 In = intCount,
                 Out = outCount,
@@ -103,12 +103,5 @@ namespace PublicBicycles.Service
             return new { full, empty };
         }
     }
-    public class Route
-    {
-        /// <summary>
-        /// 入站（归还）的车辆的来源
-        /// </summary>
-        public Dictionary<int, int> In { get; set; } = new Dictionary<int, int>();
-        public Dictionary<int, int> Out { get; set; } = new Dictionary<int, int>();
-    }
+
 }

@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <div v-title data-title="数据库 - 公共自行车"></div>
     <el-input v-model="days"></el-input>
     <br />
     <el-button @click="generateTestDatas()">生成测试数据</el-button>

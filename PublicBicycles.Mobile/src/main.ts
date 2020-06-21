@@ -9,6 +9,14 @@ import VueAxios from 'vue-axios'
 
 Vue.use(VueAxios, axios)
 Vue.config.productionTip = false
+Vue.directive('title', {//单个修改标题
+  inserted: function (el, binding) {
+    if(el.dataset.title)
+    {
+    document.title = el.dataset.title
+    }
+  }
+})
 Vue.use(ElementUI);
 new Vue({
   router,

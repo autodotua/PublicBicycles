@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <div v-title data-title="管理 - 公共自行车"></div>
     <map-view
       ref="map"
       @select="stationSelected"

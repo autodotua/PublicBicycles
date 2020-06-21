@@ -13,37 +13,37 @@ namespace PublicBicycles.API.Controllers
         /// <returns></returns>
         [HttpPost]
         [Route("Routes")]
-        public async Task<ResponseData<object>> GetRoutesAsync([FromBody] RouteRequest request)
+        public async Task<ResponseData> GetRoutesAsync([FromBody] RouteRequest request)
         {
             if (!request.IsValid(true))
             {
-                return new ResponseData<object>(null, false, "用户验证失败");
+                return new ResponseData(null, false, "用户验证失败");
             }
             var result = await StatisticsService.GetStationRoutesAsync(db, request.StationID, request.Days);
-            return new ResponseData<object>(result);
+            return new ResponseData(result);
         }
 
         [HttpPost]
         [Route("Leaderboard")]
-        public async Task<ResponseData<object>> GetLeaderboardAsync([FromBody] StatisticRequest request)
+        public async Task<ResponseData> GetLeaderboardAsync([FromBody] StatisticRequest request)
         {
             if (!request.IsValid(true))
             {
-                return new ResponseData<object>(null, false, "用户验证失败");
+                return new ResponseData(null, false, "用户验证失败");
             }
             var result = await StatisticsService.GetLeaderboardAsync(db, request.Days);
-            return new ResponseData<object>(result);
+            return new ResponseData(result);
         }   
         [HttpPost]
         [Route("Move")]
-        public async Task<ResponseData<object>> GetMoveNeededAsync([FromBody] StatisticRequest request)
+        public async Task<ResponseData> GetMoveNeededAsync([FromBody] StatisticRequest request)
         {
             if (!request.IsValid(true))
             {
-                return new ResponseData<object>(null, false, "用户验证失败");
+                return new ResponseData(null, false, "用户验证失败");
             }
             var result = await StatisticsService.GetMoveNeededAsync(db);
-            return new ResponseData<object>(result);
+            return new ResponseData(result);
         }
     }
     public class RouteRequest : StatisticRequest

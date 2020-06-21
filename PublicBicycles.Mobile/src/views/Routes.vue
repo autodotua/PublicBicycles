@@ -1,5 +1,6 @@
 <template>
   <div class="container">
+    <div v-title data-title="租借路线 - 公共自行车"></div>
     <map-view ref="map" map-type="routes" :enableSearch="true" @gotStations="gotStations"></map-view>
   </div>
 </template>

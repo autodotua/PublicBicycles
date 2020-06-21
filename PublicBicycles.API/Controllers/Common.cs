@@ -12,9 +12,9 @@ namespace PublicBicycles.API.Controllers
     /// 通用的服务器返回浏览器的回应
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class ResponseData<T>
+    public class ResponseData
     {
-        public ResponseData(T data,bool succeed=true,string message=null)
+        public ResponseData(object data,bool succeed=true,string message=null)
         {
             Data = data;
             Succeed = succeed;
@@ -34,7 +34,7 @@ namespace PublicBicycles.API.Controllers
         /// <summary>
         /// 数据主体
         /// </summary>
-        public T Data { get; set; }
+        public object Data { get; set; }
     }
     /// <summary>
     /// 数据库上下文
