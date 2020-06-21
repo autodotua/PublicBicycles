@@ -51,6 +51,9 @@ export default Vue.component("map-view", {
     mapType: {
       default: "normal"
     },
+    autoLoad: {
+      default: true
+    },
     enableClick: {
       default: false
     },
@@ -59,6 +62,9 @@ export default Vue.component("map-view", {
     },
     searchBarStyle: {
       default: "top:72px"
+    },
+    filter: {
+      default: []
     }
   },
   computed: {},
@@ -98,7 +104,7 @@ export default Vue.component("map-view", {
             color: "#fff",
             width: 3
           }),
-          scale:1.5,
+          scale: 1.5,
           text: feature.getProperties().object.name
         })
       });
@@ -225,15 +231,18 @@ export default Vue.component("map-view", {
     /**
      * 加载租赁点图层
      */
-    loadStations(features) {
+    loadStations(features,late) {
       const layer = new ol.layer.Vector({
         name: "stations",
-        maxResolution: 6, //越小越晚出现
         source: new ol.source.Vector({
           features: features
         }),
         style: feature => this.getStyle(feature)
       });
+      if(late)
+      {
+        layer.setMaxResolution(6); //越小越晚出现
+      }
       this.stationLayer = layer;
       this.map.addLayer(layer);
     },
@@ -331,10 +340,13 @@ export default Vue.component("map-view", {
         .get(getUrl("Map", "Stations"))
         .then(response => {
           const features = [];
-          this.stations = response.data.data;
+          this.stations =
+            this.filter.length == 0
+              ? response.data.data
+              : response.data.data.filter(p => this.filter.indexOf(p.id) >= 0);
           //向上级发送获取到的租赁点信息
-          this.$emit("gotStations", response.data.data);
-          for (const station of response.data.data) {
+          this.$emit("gotStations",  this.stations);
+          for (const station of this.stations) {
             const point = new ol.geom.Point(
               ol.proj.fromLonLat([station.lng, station.lat])
             );
@@ -349,6 +361,9 @@ export default Vue.component("map-view", {
             case "routes":
               //对于普通或路线类型，加载聚类图层和租赁点图层
               this.loadCluster(response.data.data);
+              this.loadStations(features,true);
+              break;
+            case "no-cluster":
               this.loadStations(features);
               break;
             case "heatmap":
@@ -370,7 +385,9 @@ export default Vue.component("map-view", {
       }
       //页面加载后，需要初始化地图并加载数据
       this.initMap();
-      this.loadDatas();
+      if (this.autoLoad) {
+        this.loadDatas();
+      }
     });
   }
 });
@@ -399,5 +416,4 @@ export default Vue.component("map-view", {
   left: 24px;
   right: 24px;
 }
-
 </style>

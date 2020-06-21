@@ -19,13 +19,41 @@ namespace PublicBicycles.API.Controllers
             {
                 return new ResponseData<object>(null, false, "用户验证失败");
             }
-            var result =await StatisticsService.GetStationRoutesAsync(db, request.StationID, request.Days);
+            var result = await StatisticsService.GetStationRoutesAsync(db, request.StationID, request.Days);
+            return new ResponseData<object>(result);
+        }
+
+        [HttpPost]
+        [Route("Leaderboard")]
+        public async Task<ResponseData<object>> GetLeaderboardAsync([FromBody] StatisticRequest request)
+        {
+            if (!request.IsValid(true))
+            {
+                return new ResponseData<object>(null, false, "用户验证失败");
+            }
+            var result = await StatisticsService.GetLeaderboardAsync(db, request.Days);
+            return new ResponseData<object>(result);
+        }   
+        [HttpPost]
+        [Route("Move")]
+        public async Task<ResponseData<object>> GetMoveNeededAsync([FromBody] StatisticRequest request)
+        {
+            if (!request.IsValid(true))
+            {
+                return new ResponseData<object>(null, false, "用户验证失败");
+            }
+            var result = await StatisticsService.GetMoveNeededAsync(db);
             return new ResponseData<object>(result);
         }
     }
-    public class RouteRequest : UserToken
+    public class RouteRequest : StatisticRequest
     {
         public int StationID { get; set; }
+    }
+    public class StatisticRequest : UserToken
+    {
         public int Days { get; set; }
     }
+
+
 }

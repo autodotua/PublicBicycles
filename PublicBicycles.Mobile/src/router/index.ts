@@ -9,6 +9,8 @@ import Routes from '../views/Routes.vue'
 import Admin from '../views/Admin.vue'
 import Heatmap from '../views/Heatmap.vue'
 import Password from '../views/Password.vue'
+import Leaderboard from '../views/Leaderboard.vue'
+import Move from '../views/Move.vue'
 
 Vue.use(VueRouter)
 
@@ -52,6 +54,16 @@ Vue.use(VueRouter)
     path: '/Records',
     name: 'Records',
     component: Records
+  },
+  {
+    path: '/Move',
+    name: 'Move',
+    component: Move
+  },
+  {
+    path: '/Leaderboard',
+    name: 'Leaderboard',
+    component: Leaderboard
   },
 
   {

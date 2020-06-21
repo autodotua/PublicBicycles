@@ -32,6 +32,14 @@
             <i class="el-icon-data-analysis"></i>
             <span slot="title">路线分析</span>
           </el-menu-item>
+          <el-menu-item index="leaderboard" v-show="isAdmin">
+            <i class="el-icon-data-analysis"></i>
+            <span slot="title">借还排行榜</span>
+          </el-menu-item>
+          <el-menu-item index="move" v-show="isAdmin">
+            <i class="el-icon-data-analysis"></i>
+            <span slot="title">车辆平衡</span>
+          </el-menu-item>
           <el-menu-item index="password" >
             <i class="el-icon-edit"></i>
             <span slot="title">修改密码</span>
