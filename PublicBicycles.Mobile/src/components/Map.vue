@@ -373,7 +373,7 @@ export default Vue.component("map-view", {
               break;
             case "heatmap":
               //this.loadCluster(response.data.data);
-              this.loadStations(features);
+              //this.loadStations(features);
               //对于热力图，还需要记载热力图图层
               this.loadHeatmap(features);
               break;
