@@ -48,7 +48,8 @@ export function formatDateTime(time: Date | string, includeTime = true): string 
  * @param action 操作名称
  */
 export function getUrl(controller: string, action: string) {
-    return `http://localhost:8520/${controller}/${action}`;
+    //return `http://localhost:8520/${controller}/${action}`;
+    return `http://autodotua.top:8015/${controller}/${action}`;
 }
 
 /**

@@ -1,7 +1,9 @@
 <template>
   <div class="login">
+    <div class="back-img"></div>
     <div v-title data-title="登录注册 - 公共自行车"></div>
-    <h1>登录</h1>
+    <div class="title">公共自行车
+    </div>
     <div class="box">
       <el-input id="name" v-model="username" placeholder="请输入帐号">
         <template slot="prepend">帐号</template>
@@ -35,7 +37,7 @@
 import Vue from "vue";
 import Cookies from "js-cookie";
 import { Notification } from "element-ui";
-import { showError, getUrl,jump } from "../common";
+import { showError, getUrl, jump } from "../common";
 import { AxiosResponse } from "axios";
 export default Vue.extend({
   data: function() {
@@ -51,8 +53,7 @@ export default Vue.extend({
         Cookies.set("token", response.data.data.token);
         Cookies.set("username", response.data.data.user.username);
         Cookies.set("isAdmin", response.data.data.user.isAdmin);
-        
-         jump("");
+        jump("");
       } else {
         Notification.error(
           (register ? "注册失败：" : "登陆失败：") + response.data.message
@@ -64,7 +65,7 @@ export default Vue.extend({
      */
     login() {
       Vue.axios
-        .post(getUrl("User","Login"), {
+        .post(getUrl("User", "Login"), {
           UserName: this.username,
           Password: this.password
         })
@@ -78,7 +79,7 @@ export default Vue.extend({
      */
     register() {
       Vue.axios
-        .post(getUrl("User","Register"), {
+        .post(getUrl("User", "Register"), {
           UserName: this.username,
           Password: this.password
         })
@@ -90,16 +91,55 @@ export default Vue.extend({
   }
 });
 </script>
+
 <style scoped>
 .box {
-  width: 100%;
+  position: absolute;
+  width: calc(100% - 24px);
+  top: 30%;
+  right: 12px;
+  left: 12px;
 }
 .box .el-row {
   width: 100%;
 }
 
-.login{
-  margin-left: 12px;
-  margin-right: 12px;
+.login {
+  width: 100%;
+  height: 100%;
+}
+
+h1 {
+}
+
+.back-img {
+  width: 100%;
+  height: 100%;
+  opacity: 0.4;
+  background-image: url(/img/login_background.jpg);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+  position: absolute;
+  top: 0;
+  z-index: -1;
+}
+
+.title{
+  text-align: center; 
+  color: white;
+  -webkit-text-stroke-width: 0.2rem;
+  -webkit-text-stroke-color: black ;
+  font-size: 3rem;
+  font-weight: bold;
+  margin-top: 1rem;
+  /* margin-left:10%;
+  margin-right:10%;
+  margin-top:6px;
+  padding-top:6px;
+  padding-bottom:6px; */
+}
+div{
+  overflow: hidden;
 }
 </style>

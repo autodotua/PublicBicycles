@@ -1,14 +1,8 @@
 <template>
   <div id="app">
     <el-container>
-      <el-header class="header">
-        <el-button
-          type="text"
-          icon="el-icon-menu"
-          style="float:left"
-          v-show="showHeader"
-          @click="menu=true"
-        ></el-button>
+      <el-header class="header" v-show="showHeader">
+        <el-button type="text" icon="el-icon-menu" style="float:left" @click="menu=true"></el-button>
         <el-button type="text" style="float:right" @click="clickUsername">{{username}}</el-button>
         <h3 style="float:left;margin-left:12px" @click="jump('')">公共自行车</h3>
         <slot name="header"></slot>
@@ -64,29 +58,37 @@ export default Vue.extend({
   data: function() {
     return {
       showHeader: true,
-      menu: false
+      menu: false,
+      isAdmin: false,
+      username: ""
     };
   },
-  computed: {
-    username() {
-      return Cookies.get("username");
+  computed: {},
+  watch: {
+    $route(to, from) {
+      this.refreshUI();
     }
   },
   mounted: function() {
     this.$nextTick(function() {
       const url = window.location.href;
       if (url.indexOf("login") >= 0) {
-        this.showHeader = false;
-        console.log("logining");
+        //
       } else {
         if (Cookies.get("userID") == undefined) {
           jump("login");
+        } else {
+          this.refreshUI();
         }
       }
     });
   },
   methods: {
-    isAdmin: isAdmin,
+    refreshUI() {
+      this.isAdmin = isAdmin();
+      this.username = Cookies.get("username") as string;
+      this.showHeader = window.location.href.indexOf("login") < 0;
+    },
     jump: jump,
     menuSelect(index: number) {
       this.menu = false;

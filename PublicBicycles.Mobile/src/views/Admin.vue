@@ -5,12 +5,20 @@
       ref="map"
       @select="stationSelected"
       map-type="normal"
-      :enableClick="true"
+      :enableClick="clickToNew"
       @gotStations="gotStations"
       @click="mapClick"
       :enableSearch="true"
     ></map-view>
-
+ <div class="bottom-bar">  
+   <a>点击地图新增站点：</a>
+        <el-switch
+      class="fullOrEmpty"
+      v-model="clickToNew"
+      active-text="启用"
+      inactive-text="禁用"
+    ></el-switch>
+    </div>
     <el-drawer
       title
       :visible.sync="drawerDetail"
@@ -119,6 +127,7 @@ export default Vue.extend({
         lng: 0,
         lat: 0
       },
+      clickToNew:false,
       searchContent: "",
       addingBicycle: false,
       addingStation: false
@@ -364,5 +373,19 @@ export default Vue.extend({
 .cell .el-button {
   margin-left: 6px;
   margin-right: 6px;
+}
+.bottom-bar {
+  position: absolute;
+  padding: 12px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #ddddddAA;
+}
+.bottom-bar a{
+}
+.bottom-bar .el-switch{
+  float: right;
+  margin: 0;
 }
 </style>

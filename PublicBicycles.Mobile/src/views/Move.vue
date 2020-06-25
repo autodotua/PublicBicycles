@@ -18,10 +18,7 @@
       active-text="车辆过多"
       inactive-text="车辆过少"
     ></el-switch>
-    <a class="detail">
-{{bikes}} / {{count}}
-
-    </a>
+    <a class="detail">{{bikes}} / {{count}}    </a>
     </div>
 
   </div>

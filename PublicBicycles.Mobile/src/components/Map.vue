@@ -64,10 +64,12 @@ export default Vue.component("map-view", {
       default: "top:72px"
     },
     filter: {
-      default: []
+      type:Array,
+      default(){return  []}
     }
   },
   computed: {},
+ 
   methods: {
     searchSelected(e) {
       this.panTo([e.lng, e.lat]);
@@ -113,6 +115,10 @@ export default Vue.component("map-view", {
      * 处理地图点击事件
      */
     handleClickEvent(event) {
+      if(!this.enableClick)
+      {
+        return;
+      }
       setTimeout(() => {
         //延迟100毫秒，让选择时间先响应
         if (this.selecting) {
@@ -132,6 +138,7 @@ export default Vue.component("map-view", {
         //生成一个标记点击点的标志
         if (this.markerLayer) {
           this.map.removeLayer(this.markerLayer);
+          this.markerLayer=undefined;
         } else {
           this.markerLayer = new ol.layer.Vector({
             name: "stations",
@@ -179,9 +186,7 @@ export default Vue.component("map-view", {
         "http://t0.tianditu.com/cva_w/wmts?service=WMTS&request=GetTile&version=1.0.0&layer=cva&style=default&TILEMATRIXSET=w&format=tiles&height=256&width=256&tilematrix={z}&tilerow={y}&tilecol={x}&tk=9396357d4b92e8e197eafa646c3c541d"
       );
       //如果需要接收点击事件，那么注册一个事件
-      if (this.enableClick) {
         this.map.on("click", this.handleClickEvent);
-      }
 
       const selection = new ol.interaction.Select({
         condition: ol.events.condition.click,
