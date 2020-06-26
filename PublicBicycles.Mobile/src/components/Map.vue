@@ -23,6 +23,13 @@
       @select="searchSelected"
       v:show="enableSearch"
     ></search-bar>
+    <el-button
+      class="el-icon-position loc-btn"
+      @click="toLocation"
+      v-show="locBtnVisiable"
+      circle
+      type="info"
+    ></el-button>
   </div>
 </template>
 <script >
@@ -41,7 +48,9 @@ export default Vue.component("map-view", {
       map: new Map({}),
       stationLayer: undefined,
       clusterLayer: undefined,
-      routesLayer: undefined
+      routesLayer: undefined,
+      location: undefined,
+      locBtnVisiable: true
     };
   },
   component: {
@@ -64,12 +73,14 @@ export default Vue.component("map-view", {
       default: "top:72px"
     },
     filter: {
-      type:Array,
-      default(){return  []}
+      type: Array,
+      default() {
+        return [];
+      }
     }
   },
   computed: {},
- 
+
   methods: {
     searchSelected(e) {
       this.panTo([e.lng, e.lat]);
@@ -111,12 +122,29 @@ export default Vue.component("map-view", {
         })
       });
     },
+    toLocation() {
+      console.log(this.location)
+      if (this.location) {
+        this.panTo(this.location);
+      } else {
+        this.locBtnVisiable = false;
+        this.locBtnVisiable = false;
+        setTimeout(() => {
+          this.locBtnVisiable = true;
+          setTimeout(() => {
+            this.locBtnVisiable = false;
+            setTimeout(() => {
+              this.locBtnVisiable = true;
+            }, 300);
+          }, 300);
+        }, 300);
+      }
+    },
     /**
      * 处理地图点击事件
      */
     handleClickEvent(event) {
-      if(!this.enableClick)
-      {
+      if (!this.enableClick) {
         return;
       }
       setTimeout(() => {
@@ -138,7 +166,7 @@ export default Vue.component("map-view", {
         //生成一个标记点击点的标志
         if (this.markerLayer) {
           this.map.removeLayer(this.markerLayer);
-          this.markerLayer=undefined;
+          this.markerLayer = undefined;
         } else {
           this.markerLayer = new ol.layer.Vector({
             name: "stations",
@@ -186,7 +214,7 @@ export default Vue.component("map-view", {
         "http://t0.tianditu.com/cva_w/wmts?service=WMTS&request=GetTile&version=1.0.0&layer=cva&style=default&TILEMATRIXSET=w&format=tiles&height=256&width=256&tilematrix={z}&tilerow={y}&tilecol={x}&tk=9396357d4b92e8e197eafa646c3c541d"
       );
       //如果需要接收点击事件，那么注册一个事件
-        this.map.on("click", this.handleClickEvent);
+      this.map.on("click", this.handleClickEvent);
 
       const selection = new ol.interaction.Select({
         condition: ol.events.condition.click,
@@ -213,6 +241,56 @@ export default Vue.component("map-view", {
           }, 200);
         }
       });
+      this.loadGeolocation();
+      // geolocation.on('change', function() {
+      //   el('accuracy').innerText = geolocation.getAccuracy() + ' [m]';
+      //   el('altitude').innerText = geolocation.getAltitude() + ' [m]';
+      //   el('altitudeAccuracy').innerText = geolocation.getAltitudeAccuracy() + ' [m]';
+      //   el('heading').innerText = geolocation.getHeading() + ' [rad]';
+      //   el('speed').innerText = geolocation.getSpeed() + ' [m/s]';
+      // });
+    },
+    loadGeolocation() {
+      const geolocation = new ol.Geolocation({
+        // enableHighAccuracy must be set to true to have the heading value.
+        trackingOptions: {
+          enableHighAccuracy: true
+        },
+        projection: this.map.getView().getProjection(),
+        tracking: true
+      });
+      const positionFeature = new Feature();
+      positionFeature.setStyle(
+        new ol.style.Style({
+          image: new ol.style.Circle({
+            radius: 6,
+            fill: new ol.style.Fill({
+              color: "#3399CC"
+            }),
+            stroke: new ol.style.Stroke({
+              color: "#fff",
+              width: 2
+            })
+          })
+        })
+      );
+
+      geolocation.on("change:position", ()=> {
+        const coordinates = geolocation.getPosition();
+        console.log("当前位置", coordinates);
+        this.location = coordinates;
+        positionFeature.setGeometry(
+          coordinates ? new ol.geom.Point(coordinates) : null
+        );
+      });
+
+      this.map.addLayer(
+        new ol.layer.Vector({
+          source: new ol.source.Vector({
+            features: [positionFeature]
+          })
+        })
+      );
     },
     /**
      * 加载聚类图层
@@ -236,7 +314,7 @@ export default Vue.component("map-view", {
     /**
      * 加载租赁点图层
      */
-    loadStations(features,late) {
+    loadStations(features, late) {
       const layer = new ol.layer.Vector({
         name: "stations",
         source: new ol.source.Vector({
@@ -244,8 +322,7 @@ export default Vue.component("map-view", {
         }),
         style: feature => this.getStyle(feature)
       });
-      if(late)
-      {
+      if (late) {
         layer.setMaxResolution(6); //越小越晚出现
       }
       this.stationLayer = layer;
@@ -328,7 +405,7 @@ export default Vue.component("map-view", {
         duration: 300,
         rotation: 0,
         zoom: 16,
-        center: ol.proj.fromLonLat(loc)
+        center:loc[0]<180? ol.proj.fromLonLat(loc):loc
       });
     },
     /**
@@ -350,7 +427,7 @@ export default Vue.component("map-view", {
               ? response.data.data
               : response.data.data.filter(p => this.filter.indexOf(p.id) >= 0);
           //向上级发送获取到的租赁点信息
-          this.$emit("gotStations",  this.stations);
+          this.$emit("gotStations", this.stations);
           for (const station of this.stations) {
             const point = new ol.geom.Point(
               ol.proj.fromLonLat([station.lng, station.lat])
@@ -366,7 +443,7 @@ export default Vue.component("map-view", {
             case "routes":
               //对于普通或路线类型，加载聚类图层和租赁点图层
               this.loadCluster(response.data.data);
-              this.loadStations(features,true);
+              this.loadStations(features, true);
               break;
             case "no-cluster":
               this.loadStations(features);
@@ -420,5 +497,11 @@ export default Vue.component("map-view", {
   /* top: 120px; */
   left: 24px;
   right: 24px;
+}
+
+.loc-btn {
+  position: absolute;
+  bottom: 20%;
+  right: 12px;
 }
 </style>
